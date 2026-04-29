@@ -1,0 +1,17 @@
+<settings>
+    <pluginGroups>
+        <pluginGroup>io.airlift</pluginGroup>
+        <pluginGroup>eu.maveniverse.maven.plugins</pluginGroup>
+    </pluginGroups>
+    <servers>
+        <server>
+            <id>sonatype-central-portal</id>
+            <username>${env.MAVENCENTRAL_USERNAME}</username>
+            <password>${env.MAVENCENTRAL_PASSWORD}</password>
+            <configuration>
+                <njord.publisher>sonatype-cp</njord.publisher>
+                <njord.releaseUrl>njord:template:release-sca</njord.releaseUrl>
+            </configuration>
+        </server>
+    </servers>
+</settings>
