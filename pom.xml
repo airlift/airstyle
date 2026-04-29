@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.airlift</groupId>
+        <artifactId>airbase</artifactId>
+        <version>372</version>
+    </parent>
+
+    <artifactId>airstyle-root</artifactId>
+    <version>1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Airstyle</name>
+    <description>Java code formatter for Airlift code style</description>
+    <url>https://github.com/airlift/airstyle</url>
+
+    <modules>
+        <module>airstyle-core</module>
+        <module>airstyle-maven-plugin</module>
+    </modules>
+
+    <scm>
+        <connection>scm:git:https://github.com/airlift/airstyle.git</connection>
+        <developerConnection>scm:git:git@github.com:airlift/airstyle.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/airlift/airstyle</url>
+    </scm>
+
+    <properties>
+        <air.check.skip-spotbugs>true</air.check.skip-spotbugs>
+        <air.check.skip-pmd>true</air.check.skip-pmd>
+        <air.check.skip-jacoco>true</air.check.skip-jacoco>
+
+        <project.build.targetJdk>25</project.build.targetJdk>
+
+        <dep.eclipse.jdt.version>3.45.0</dep.eclipse.jdt.version>
+        <dep.eclipse.equinox.common.version>3.20.300</dep.eclipse.equinox.common.version>
+        <dep.eclipse.osgi.version>3.24.100</dep.eclipse.osgi.version>
+        <dep.eclipse.text.version>3.14.600</dep.eclipse.text.version>
+        <dep.maven.version>3.9.15</dep.maven.version>
+        <dep.maven-plugin-annotations.version>3.15.2</dep.maven-plugin-annotations.version>
+        <dep.plexus-utils.version>4.0.3</dep.plexus-utils.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${dep.maven.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${dep.maven.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${dep.maven-plugin-annotations.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>${dep.plexus-utils.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jdt</groupId>
+                <artifactId>ecj</artifactId>
+                <version>${dep.eclipse.jdt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jdt</groupId>
+                <artifactId>org.eclipse.jdt.core</artifactId>
+                <version>${dep.eclipse.jdt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.equinox.common</artifactId>
+                <version>${dep.eclipse.equinox.common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.osgi</artifactId>
+                <version>${dep.eclipse.osgi.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.text</artifactId>
+                <version>${dep.eclipse.text.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>${dep.maven-plugin-annotations.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.basepom.maven</groupId>
+                    <artifactId>duplicate-finder-maven-plugin</artifactId>
+                    <configuration>
+                        <ignoredResourcePatterns>
+                            <ignoredResourcePattern>\.api_description</ignoredResourcePattern>
+                            <ignoredResourcePattern>\.options</ignoredResourcePattern>
+                            <ignoredResourcePattern>plugin\.xml</ignoredResourcePattern>
+                            <ignoredResourcePattern>plugin\.properties</ignoredResourcePattern>
+                            <ignoredResourcePattern>about\.html</ignoredResourcePattern>
+                            <ignoredResourcePattern>about_files/.*</ignoredResourcePattern>
+                        </ignoredResourcePatterns>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

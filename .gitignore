@@ -1,0 +1,6 @@
+.beads/
+.mn-data/
+target/
+.stordriv/
+*.class
+*.log

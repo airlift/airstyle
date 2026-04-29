@@ -1,0 +1,115 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.airlift.airstyle.maven;
+
+import io.airlift.airstyle.AirstyleFormatter;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Checks that Java source files are already formatted with Airstyle.
+ * <p>
+ * This mojo validates that all Java files in the project's source directories already match Airstyle's formatting output.
+ * If any files would be rewritten, the build fails.
+ */
+@Mojo(name = "check", defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true)
+public class CheckMojo
+        extends AbstractFormattingMojo
+{
+    /**
+     * Whether to fail the build if files needing formatting are found.
+     */
+    @Parameter(property = "airstyle.failOnViolation", defaultValue = "true")
+    private boolean failOnViolation;
+
+    @Override
+    public void execute()
+            throws MojoExecutionException, MojoFailureException
+    {
+        if (isSkip()) {
+            getLog().info("Airstyle check skipped");
+            return;
+        }
+
+        List<Path> directories = collectSourceDirectories();
+
+        if (directories.isEmpty()) {
+            getLog().info("No source directories found");
+            return;
+        }
+
+        List<Path> allJavaFiles = new ArrayList<>();
+        for (Path directory : directories) {
+            if (!Files.isDirectory(directory)) {
+                getLog().debug("Skipping non-existent directory: " + directory);
+                continue;
+            }
+
+            allJavaFiles.addAll(collectJavaFiles(directory));
+        }
+
+        if (allJavaFiles.isEmpty()) {
+            getLog().info("No Java files found to check");
+            return;
+        }
+
+        AirstyleFormatter formatter = new AirstyleFormatter();
+        List<Path> filesNeedingFormatting = new ArrayList<>();
+        for (Path file : allJavaFiles) {
+            if (needsFormatting(formatter, file)) {
+                filesNeedingFormatting.add(file);
+            }
+        }
+
+        if (filesNeedingFormatting.isEmpty()) {
+            getLog().info("All " + allJavaFiles.size() + " files are already formatted");
+            return;
+        }
+
+        getLog().warn("Found " + filesNeedingFormatting.size() + " file(s) that need formatting:");
+        for (Path file : filesNeedingFormatting) {
+            getLog().warn("  " + file);
+        }
+        getLog().warn("Run `mvn airstyle:format` to apply the required changes.");
+
+        if (failOnViolation) {
+            throw new MojoFailureException("Found " + filesNeedingFormatting.size() + " file(s) that need formatting.");
+        }
+    }
+
+    private static boolean needsFormatting(AirstyleFormatter formatter, Path file)
+            throws MojoExecutionException
+    {
+        try {
+            String original = Files.readString(file);
+            String formatted = formatter.format(original);
+            return !original.equals(formatted);
+        }
+        catch (IOException e) {
+            throw new MojoExecutionException("Error checking file: " + file, e);
+        }
+        catch (RuntimeException e) {
+            throw new MojoExecutionException("Internal formatter error while checking file: " + file, e);
+        }
+    }
+}
