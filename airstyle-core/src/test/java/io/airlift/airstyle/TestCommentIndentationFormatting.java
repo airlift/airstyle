@@ -438,6 +438,31 @@ public class TestCommentIndentationFormatting
     }
 
     @Test
+    void testFormatterKeepsJavadocParagraphContinuationInsideReturnTag()
+    {
+        String code =
+                """
+                class Test
+                {
+                    /**
+                     * @return whether this node should produce default output in case of no input pages.
+                     *         For example:
+                     *         <p>
+                     *         SELECT count(*) FROM nation
+                     *         <p>
+                     *         A default output is expected.
+                     */
+                    boolean hasDefaultOutput()
+                    {
+                        return true;
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterKeepsCommentIndentedInsideCatchBlock()
     {
         String oldCode =

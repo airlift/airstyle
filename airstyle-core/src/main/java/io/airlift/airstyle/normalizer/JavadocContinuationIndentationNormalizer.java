@@ -88,7 +88,7 @@ public final class JavadocContinuationIndentationNormalizer
                 replacements.addAll(tagContinuationReplacements(sourceModel, javadoc, tag));
             }
         }
-        replacements.addAll(paragraphAfterPreReplacements(sourceModel, javadoc.isMarkdown(), javadoc));
+        replacements.addAll(paragraphAfterPreReplacements(sourceModel, javadoc.isMarkdown(), javadoc, tags));
         return replacements;
     }
 
@@ -140,7 +140,7 @@ public final class JavadocContinuationIndentationNormalizer
         return replacements;
     }
 
-    private static List<Replacement> paragraphAfterPreReplacements(SourceModel sourceModel, boolean markdown, Javadoc javadoc)
+    private static List<Replacement> paragraphAfterPreReplacements(SourceModel sourceModel, boolean markdown, Javadoc javadoc, List<TagElement> tags)
     {
         List<Replacement> replacements = new ArrayList<>();
         int startLine = sourceModel.lineNumber(javadoc.getStartPosition());
@@ -158,7 +158,7 @@ public final class JavadocContinuationIndentationNormalizer
                 inPre = true;
             }
 
-            if (!inPre && trimmed.startsWith("<p>")) {
+            if (!inPre && trimmed.startsWith("<p>") && !isInsideNamedBlockTag(tags, lineInfo.contentStart())) {
                 String desiredPrefix = sourceModel.leadingWhitespace(lineInfo.lineStart(), lineInfo.firstNonWhitespace()) + (markdown ? "/// " : "* ");
                 if (!sourceModel.source().substring(lineInfo.lineStart(), lineInfo.contentStart()).equals(desiredPrefix)) {
                     replacements.add(new Replacement(lineInfo.lineStart(), lineInfo.contentStart(), desiredPrefix));
@@ -170,5 +170,18 @@ public final class JavadocContinuationIndentationNormalizer
             }
         }
         return replacements;
+    }
+
+    private static boolean isInsideNamedBlockTag(List<TagElement> tags, int position)
+    {
+        for (TagElement tag : tags) {
+            if (tag.getTagName() == null) {
+                continue;
+            }
+            if (position >= tag.getStartPosition() && position < tag.getStartPosition() + tag.getLength()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
