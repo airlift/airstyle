@@ -19,11 +19,14 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 
 /**
  * Base class for Airstyle formatting mojos.
@@ -73,6 +76,12 @@ public abstract class AbstractFormattingMojo
     @Parameter(property = "airstyle.includeTestSources", defaultValue = "true")
     protected boolean includeTestSources;
 
+    /**
+     * Process files in parallel using the JVM common fork-join pool.
+     */
+    @Parameter(property = "airstyle.parallel", defaultValue = "true")
+    protected boolean parallel;
+
     protected final boolean isSkip()
     {
         return skip;
@@ -89,6 +98,21 @@ public abstract class AbstractFormattingMojo
         }
 
         return directories;
+    }
+
+    protected final List<Path> collectAllJavaFiles()
+            throws MojoExecutionException
+    {
+        List<Path> allJavaFiles = new ArrayList<>();
+        for (Path directory : collectSourceDirectories()) {
+            if (!Files.isDirectory(directory)) {
+                getLog().debug("Skipping non-existent directory: " + directory);
+                continue;
+            }
+
+            allJavaFiles.addAll(collectJavaFiles(directory));
+        }
+        return allJavaFiles;
     }
 
     protected final List<Path> collectJavaFiles(Path directory)
@@ -114,6 +138,58 @@ public abstract class AbstractFormattingMojo
         }
     }
 
+    protected final <T> List<T> processFiles(List<Path> files, String operation, FileProcessor<T> processor)
+            throws MojoExecutionException
+    {
+        if (files.isEmpty()) {
+            return List.of();
+        }
+        if (!parallel || files.size() == 1) {
+            List<T> results = new ArrayList<>(files.size());
+            for (Path file : files) {
+                results.add(processFile(file, operation, processor));
+            }
+            return results;
+        }
+        try {
+            return files.parallelStream()
+                    .map(file -> processFile(file, operation, processor))
+                    .toList();
+        }
+        catch (RuntimeException e) {
+            Throwable cause = unwrap(e);
+            if (cause instanceof FileProcessingException fileProcessingException) {
+                throw fileProcessingException.mojoExecutionException();
+            }
+            throw new MojoExecutionException("Error while " + operation + " files", cause);
+        }
+    }
+
+    private static <T> T processFile(Path file, String operation, FileProcessor<T> processor)
+    {
+        try {
+            return processor.process(file);
+        }
+        catch (FileProcessingException e) {
+            throw e;
+        }
+        catch (IOException e) {
+            throw new FileProcessingException(new MojoExecutionException("Error " + operation + " file: " + file, e));
+        }
+        catch (RuntimeException e) {
+            throw new FileProcessingException(new MojoExecutionException("Internal formatter error while " + operation + " file: " + file, e));
+        }
+    }
+
+    private static Throwable unwrap(Throwable throwable)
+    {
+        Throwable current = throwable;
+        while (current instanceof CompletionException && current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current;
+    }
+
     private static Set<String> patternsOrDefault(Set<String> patterns)
     {
         if (patterns == null || patterns.isEmpty()) {
@@ -136,6 +212,30 @@ public abstract class AbstractFormattingMojo
                     .map(Object::toString)
                     .map(Path::of)
                     .forEach(directories::add);
+        }
+    }
+
+    @FunctionalInterface
+    protected interface FileProcessor<T>
+    {
+        T process(Path file)
+                throws IOException;
+    }
+
+    private static final class FileProcessingException
+            extends RuntimeException
+    {
+        private final MojoExecutionException mojoExecutionException;
+
+        private FileProcessingException(MojoExecutionException mojoExecutionException)
+        {
+            super(mojoExecutionException);
+            this.mojoExecutionException = mojoExecutionException;
+        }
+
+        private MojoExecutionException mojoExecutionException()
+        {
+            return mojoExecutionException;
         }
     }
 }

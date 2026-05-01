@@ -23,7 +23,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -58,28 +57,18 @@ public class CheckMojo
             return;
         }
 
-        List<Path> allJavaFiles = new ArrayList<>();
-        for (Path directory : directories) {
-            if (!Files.isDirectory(directory)) {
-                getLog().debug("Skipping non-existent directory: " + directory);
-                continue;
-            }
-
-            allJavaFiles.addAll(collectJavaFiles(directory));
-        }
+        List<Path> allJavaFiles = collectAllJavaFiles();
 
         if (allJavaFiles.isEmpty()) {
             getLog().info("No Java files found to check");
             return;
         }
 
-        AirstyleFormatter formatter = new AirstyleFormatter();
-        List<Path> filesNeedingFormatting = new ArrayList<>();
-        for (Path file : allJavaFiles) {
-            if (needsFormatting(formatter, file)) {
-                filesNeedingFormatting.add(file);
-            }
-        }
+        FileProcessor<CheckResult> processor = file -> new CheckResult(file, needsFormatting(new AirstyleFormatter(), file));
+        List<Path> filesNeedingFormatting = processFiles(allJavaFiles, "checking", processor).stream()
+                .filter(CheckResult::needsFormatting)
+                .map(CheckResult::file)
+                .toList();
 
         if (filesNeedingFormatting.isEmpty()) {
             getLog().info("All " + allJavaFiles.size() + " files are already formatted");
@@ -98,18 +87,12 @@ public class CheckMojo
     }
 
     private static boolean needsFormatting(AirstyleFormatter formatter, Path file)
-            throws MojoExecutionException
+            throws IOException
     {
-        try {
-            String original = Files.readString(file);
-            String formatted = formatter.format(original);
-            return !original.equals(formatted);
-        }
-        catch (IOException e) {
-            throw new MojoExecutionException("Error checking file: " + file, e);
-        }
-        catch (RuntimeException e) {
-            throw new MojoExecutionException("Internal formatter error while checking file: " + file, e);
-        }
+        String original = Files.readString(file);
+        String formatted = formatter.format(original);
+        return !original.equals(formatted);
     }
+
+    private record CheckResult(Path file, boolean needsFormatting) {}
 }

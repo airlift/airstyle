@@ -49,36 +49,24 @@ public class FormatMojo
             return;
         }
 
-        AirstyleFormatter formatter = new AirstyleFormatter();
-        int filesProcessed = 0;
+        List<Path> javaFiles = collectAllJavaFiles();
+        if (javaFiles.isEmpty()) {
+            getLog().info("No Java files found to format");
+            return;
+        }
+
+        FileProcessor<FormatResult> processor = file -> new FormatResult(file, formatFile(new AirstyleFormatter(), file));
+        List<FormatResult> results = processFiles(javaFiles, "formatting", processor);
+
         int filesFormatted = 0;
-
-        for (Path directory : directories) {
-            if (!Files.isDirectory(directory)) {
-                getLog().debug("Skipping non-existent directory: " + directory);
-                continue;
-            }
-
-            List<Path> javaFiles = collectJavaFiles(directory);
-
-            for (Path file : javaFiles) {
-                try {
-                    filesProcessed++;
-                    if (formatFile(formatter, file)) {
-                        filesFormatted++;
-                        getLog().info("Formatted: " + file);
-                    }
-                }
-                catch (IOException e) {
-                    throw new MojoExecutionException("Error formatting file: " + file, e);
-                }
-                catch (RuntimeException e) {
-                    throw new MojoExecutionException("Internal formatter error while formatting file: " + file, e);
-                }
+        for (FormatResult result : results) {
+            if (result.formatted()) {
+                filesFormatted++;
+                getLog().info("Formatted: " + result.file());
             }
         }
 
-        getLog().info("Processed " + filesProcessed + " files, formatted " + filesFormatted);
+        getLog().info("Processed " + javaFiles.size() + " files, formatted " + filesFormatted);
     }
 
     /**
@@ -97,4 +85,6 @@ public class FormatMojo
 
         return false;
     }
+
+    private record FormatResult(Path file, boolean formatted) {}
 }

@@ -68,6 +68,7 @@ These parameters are shared by `check` and `format`:
 | `<includes>`              | Ant-style patterns for included files.<br>**Default:** `**/*.java`<br>**User Property:** `airstyle.includes`                         |
 | `<excludes>`              | Ant-style patterns for excluded files.<br>**Default:** no exclusions<br>**User Property:** `airstyle.excludes`                       |
 | `<includeTestSources>`    | Include test source roots.<br>**Default:** `true`<br>**User Property:** `airstyle.includeTestSources`                                |
+| `<parallel>`              | Process files in parallel.<br>**Default:** `true`<br>**User Property:** `airstyle.parallel`                                          |
 | `<skip>`                  | Skip goal execution.<br>**Default:** `false`<br>**User Property:** `airstyle.skip`                                                   |
 
 ### `check` Parameters

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +45,32 @@ class TestAbstractFormattingMojo
                         directory.resolve("nested/Nested.java"));
     }
 
+    @Test
+    void testProcessFilesPreservesResultOrder(@TempDir Path directory)
+            throws Exception
+    {
+        List<Path> files = List.of(
+                directory.resolve("First.java"),
+                directory.resolve("Second.java"),
+                directory.resolve("Third.java"));
+
+        TestMojo mojo = new TestMojo();
+
+        assertThat(mojo.processFileNames(files))
+                .containsExactly("First.java", "Second.java", "Third.java");
+    }
+
+    @Test
+    void testProcessFilesCanRunSequentially(@TempDir Path directory)
+            throws Exception
+    {
+        TestMojo mojo = new TestMojo();
+        mojo.parallel = false;
+
+        assertThat(mojo.processFileNames(List.of(directory.resolve("Test.java"))))
+                .containsExactly("Test.java");
+    }
+
     private static void createFile(Path file)
             throws Exception
     {
@@ -56,5 +83,11 @@ class TestAbstractFormattingMojo
     {
         @Override
         public void execute() {}
+
+        private List<String> processFileNames(List<Path> files)
+                throws org.apache.maven.plugin.MojoExecutionException
+        {
+            return processFiles(files, "testing", file -> file.getFileName().toString());
+        }
     }
 }
