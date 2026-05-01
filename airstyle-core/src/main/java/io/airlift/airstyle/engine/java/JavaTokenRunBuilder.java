@@ -14,6 +14,7 @@
 package io.airlift.airstyle.engine.java;
 
 import io.airlift.airstyle.engine.Block;
+import io.airlift.airstyle.engine.Indent;
 import io.airlift.airstyle.engine.Spacing;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 
@@ -40,6 +41,11 @@ final class JavaTokenRunBuilder
         return buildTokenRun(JavaSourceRange.leaf(debugName, start, end), debugName, canUseFirstChildIndent);
     }
 
+    Block buildTokensRangeWithLineStartIndent(int start, int end, String debugName, Indent lineStartIndent)
+    {
+        return buildTokenRun(JavaSourceRange.leaf(debugName, start, end), debugName, true, lineStartIndent);
+    }
+
     Block buildLeafTokenRun(JavaSourceRange range, String debugName)
     {
         return buildTokenRun(range, debugName, true);
@@ -52,12 +58,18 @@ final class JavaTokenRunBuilder
 
     private Block buildTokenRun(JavaSourceRange range, String debugName, boolean canUseFirstChildIndent)
     {
+        return buildTokenRun(range, debugName, canUseFirstChildIndent, null);
+    }
+
+    private Block buildTokenRun(JavaSourceRange range, String debugName, boolean canUseFirstChildIndent, Indent lineStartIndent)
+    {
         JavaBlock.Builder composite = JavaBlock.builder(range.start(), range.end(), debugName);
         if (!canUseFirstChildIndent) {
             composite.canUseFirstChildIndent(false);
         }
         List<JavaTokens.Token> tokens = sourceContext.tokensIn(range.start(), range.end());
         Block prev = null;
+        JavaTokens.Token prevToken = null;
         int prevType = -1;
         int prevStart = -1;
         int prevEnd = -1;
@@ -66,7 +78,9 @@ final class JavaTokenRunBuilder
         int prevNonCommentStart = -1;
         int prevPrevNonCommentStart = -1;
         for (JavaTokens.Token token : tokens) {
-            Block leaf = leafFor(token);
+            boolean startsLine = prevToken == null || sourceContext.lineBreakBetween(prevToken, token);
+            Indent leafIndent = startsLine ? lineStartIndent : null;
+            Block leaf = leafFor(token, leafIndent);
             if (prev != null) {
                 Spacing spacing = spacingPolicy.between(
                         prevType,
@@ -78,6 +92,7 @@ final class JavaTokenRunBuilder
                 composite.spacing(prev, leaf, spacing);
             }
             composite.child(leaf);
+            prevToken = token;
             prev = leaf;
             prevType = token.type();
             prevStart = token.start();
@@ -92,14 +107,23 @@ final class JavaTokenRunBuilder
         return composite.build();
     }
 
-    private static Block leafFor(JavaTokens.Token token)
+    private static Block leafFor(JavaTokens.Token token, Indent indent)
     {
         boolean trailingNewlineComment = token.isComment()
                 && (token.type() == ITerminalSymbols.TokenNameCOMMENT_LINE
                 || token.type() == ITerminalSymbols.TokenNameCOMMENT_MARKDOWN);
         if (trailingNewlineComment && token.text().endsWith("\n")) {
-            return JavaBlock.leaf(token.start(), token.end() - 1, token.text().substring(0, token.text().length() - 1));
+            return leaf(token.start(), token.end() - 1, token.text().substring(0, token.text().length() - 1), indent);
         }
-        return JavaBlock.leaf(token.start(), token.end(), token.text());
+        return leaf(token.start(), token.end(), token.text(), indent);
+    }
+
+    private static Block leaf(int start, int end, String debugName, Indent indent)
+    {
+        JavaBlock.Builder leaf = JavaBlock.builder(start, end, debugName);
+        if (indent != null) {
+            leaf.indent(indent);
+        }
+        return leaf.build();
     }
 }

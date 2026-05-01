@@ -64,4 +64,22 @@ final class JavaSourceContext
         }
         return false;
     }
+
+    boolean lineBreakBetween(JavaTokens.Token previous, JavaTokens.Token next)
+    {
+        return previous.text().endsWith("\n")
+                || containsLineBreak(previous.end(), next.start());
+    }
+
+    int firstTokenAfterLineBreak(int start, int end)
+    {
+        JavaTokens.Token previous = null;
+        for (JavaTokens.Token token : tokensIn(start, end)) {
+            if (previous != null && lineBreakBetween(previous, token)) {
+                return token.start();
+            }
+            previous = token;
+        }
+        return -1;
+    }
 }

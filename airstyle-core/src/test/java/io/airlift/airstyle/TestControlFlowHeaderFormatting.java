@@ -16,9 +16,138 @@ package io.airlift.airstyle;
 import org.junit.jupiter.api.Test;
 
 import static io.airlift.airstyle.FormatterAssertions.assertCanonicalFormatting;
+import static io.airlift.airstyle.FormatterAssertions.assertFormatsOldToNew;
 
 public class TestControlFlowHeaderFormatting
 {
+    @Test
+    void testFormatterKeepsWrappedMultiCatchHeaderAtContinuationIndent()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            execute();
+                        }
+                        catch (AlreadyExistsException
+                        | EntityNotFoundException
+                        | InvalidInputException
+                        | ResourceLimitException e) {
+                            recover();
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            execute();
+                        }
+                        catch (AlreadyExistsException
+                                | EntityNotFoundException
+                                | InvalidInputException
+                                | ResourceLimitException e) {
+                            recover();
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsCommentInWrappedMultiCatchHeaderAtContinuationIndent()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            execute();
+                        }
+                        catch (IOException |
+                        // handle other errors
+                        RuntimeException e) {
+                            recover();
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            execute();
+                        }
+                        catch (IOException |
+                                // handle other errors
+                                RuntimeException e) {
+                            recover();
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsInlineCommentInWrappedMultiCatchHeaderAtContinuationIndent()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            execute();
+                        }
+                        catch (IOException |   // IO errors
+                        // handle other errors
+                        RuntimeException e) {
+                            recover();
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            execute();
+                        }
+                        catch (IOException |   // IO errors
+                                // handle other errors
+                                RuntimeException e) {
+                            recover();
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
     @Test
     void testFormatterKeepsWrappedBooleanAssignmentContinuationInCatchLoop()
     {

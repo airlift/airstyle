@@ -1054,6 +1054,11 @@ public final class JavaBlockBuilder
         return tokenRunBuilder.buildTokensRange(start, end, debugName, canUseFirstChildIndent);
     }
 
+    Block buildTokensRangeWithLineStartIndent(int start, int end, String debugName, Indent lineStartIndent)
+    {
+        return tokenRunBuilder.buildTokensRangeWithLineStartIndent(start, end, debugName, lineStartIndent);
+    }
+
     Block buildLeafTokenRun(JavaSourceRange range, String debugName)
     {
         return tokenRunBuilder.buildLeafTokenRun(range, debugName);

@@ -913,11 +913,30 @@ final class JavaStatementBuilder
     {
         int bodyStart = clause.getBody().getStartPosition();
         JavaBlock.Builder catchBlock = JavaBlock.builder(clauseStart, clauseEnd, "CatchClause");
-        Block header = owner.buildTokensRange(clauseStart, bodyStart, "CatchHeader");
+        Block header = buildCatchHeader(clauseStart, bodyStart);
         catchBlock.child(header);
         Block body = buildStatementBlock(clause.getBody(), true);
         addSibling(catchBlock, header, body, JavaConstructSpacing.sameLineBeforeBlock());
         return catchBlock.build();
+    }
+
+    private Block buildCatchHeader(int clauseStart, int bodyStart)
+    {
+        int firstWrappedTokenStart = sourceContext.firstTokenAfterLineBreak(clauseStart, bodyStart);
+        if (firstWrappedTokenStart < 0) {
+            return owner.buildTokensRange(clauseStart, bodyStart, "CatchHeader");
+        }
+
+        JavaBlock.Builder header = JavaBlock.builder(clauseStart, bodyStart, "CatchHeader");
+        Block prefix = owner.buildTokensRange(clauseStart, firstWrappedTokenStart, "CatchHeaderPrefix");
+        header.child(prefix);
+        Block continuation = owner.buildTokensRangeWithLineStartIndent(
+                firstWrappedTokenStart,
+                bodyStart,
+                "CatchHeaderContinuation",
+                Indent.continuationIndent());
+        addSibling(header, prefix, continuation, Spacing.createSpacing(0, 0, 1, true, 0));
+        return header.build();
     }
 
     private Block buildFinallyBlock(org.eclipse.jdt.core.dom.Block finallyBody, int finallyKeywordStart)
