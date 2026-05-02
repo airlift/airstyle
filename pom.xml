@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>airstyle-root</artifactId>
-    <version>1</version>
+    <version>2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Airstyle</name>
@@ -24,7 +24,7 @@
     <scm>
         <connection>scm:git:https://github.com/airlift/airstyle.git</connection>
         <developerConnection>scm:git:git@github.com:airlift/airstyle.git</developerConnection>
-        <tag>1</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/airlift/airstyle</url>
     </scm>
 
