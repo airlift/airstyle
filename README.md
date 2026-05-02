@@ -77,16 +77,6 @@ These parameters are shared by `check` and `format`:
 |---|---|
 | `<failOnViolation>` | Fail the build when files needing formatting are found.<br>**Default:** `true`<br>**User Property:** `airstyle.failOnViolation` |
 
-## Architecture
-
-Airstyle is a three-stage pipeline:
-
-1. **Pre-format** normalizers rewrite source-level concerns (imports, modifier order, redundant modifiers, literal case, brace placement, wrapped argument lists).
-2. **Format** runs an IntelliJ-inspired block-tree layout engine that owns indent and inter-token spacing.
-3. **Post-format** normalizers fix up edge cases the engine doesn't cover (text block margins, comment columns, type-hierarchy preservation) and do final cleanup.
-
-See [docs/FORMATTER_ARCHITECTURE.md](docs/FORMATTER_ARCHITECTURE.md) for details, and [docs/FORMATTER_STYLE.md](docs/FORMATTER_STYLE.md) for the layout rules themselves.
-
 ## License
 
 See [LICENSE](LICENSE). Airstyle is licensed under the Apache License 2.0.
