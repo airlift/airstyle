@@ -73,11 +73,11 @@ public class CheckMojo
                 .toList();
 
         if (filesNeedingFormatting.isEmpty()) {
-            getLog().info("All " + allJavaFiles.size() + " files are already formatted");
+            getLog().info("All %s files are already formatted".formatted(allJavaFiles.size()));
             return;
         }
 
-        getLog().warn("Found " + filesNeedingFormatting.size() + " file(s) that need formatting:");
+        getLog().warn("Found %s file(s) that need formatting:".formatted(filesNeedingFormatting.size()));
         for (Path file : filesNeedingFormatting) {
             getLog().warn("  " + file);
         }

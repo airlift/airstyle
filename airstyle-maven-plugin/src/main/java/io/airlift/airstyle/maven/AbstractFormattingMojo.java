@@ -161,7 +161,7 @@ public abstract class AbstractFormattingMojo
             if (cause instanceof FileProcessingException fileProcessingException) {
                 throw fileProcessingException.mojoExecutionException();
             }
-            throw new MojoExecutionException("Error while " + operation + " files", cause);
+            throw new MojoExecutionException("Error while %s files".formatted(operation), cause);
         }
     }
 
@@ -174,10 +174,10 @@ public abstract class AbstractFormattingMojo
             throw e;
         }
         catch (IOException e) {
-            throw new FileProcessingException(new MojoExecutionException("Error " + operation + " file: " + file, e));
+            throw new FileProcessingException(new MojoExecutionException("Error %s file: %s".formatted(operation, file), e));
         }
         catch (RuntimeException e) {
-            throw new FileProcessingException(new MojoExecutionException("Internal formatter error while " + operation + " file: " + file, e));
+            throw new FileProcessingException(new MojoExecutionException("Internal formatter error while %s file: %s".formatted(operation, file), e));
         }
     }
 

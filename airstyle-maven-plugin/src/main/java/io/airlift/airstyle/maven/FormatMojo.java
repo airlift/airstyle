@@ -66,7 +66,7 @@ public class FormatMojo
             }
         }
 
-        getLog().info("Processed " + javaFiles.size() + " files, formatted " + filesFormatted);
+        getLog().info("Processed %s files, formatted %s".formatted(javaFiles.size(), filesFormatted));
     }
 
     /**
