@@ -55,7 +55,8 @@ public class FormatMojo
             return;
         }
 
-        FileProcessor<FormatResult> processor = file -> new FormatResult(file, formatFile(new AirstyleFormatter(), file));
+        AirstyleFormatter formatter = createFormatter();
+        FileProcessor<FormatResult> processor = file -> new FormatResult(file, formatFile(formatter, file));
         List<FormatResult> results = processFiles(javaFiles, "formatting", processor);
 
         int filesFormatted = 0;

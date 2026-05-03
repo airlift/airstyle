@@ -66,11 +66,6 @@ import java.util.function.UnaryOperator;
 /// Applies a pipeline of structural normalizations (comments, imports,
 /// wrapped argument lists, braces, semicolons, etc.) and format cleanup
 /// phases to produce the canonical Airstyle style.
-///
-/// ```java
-/// AirstyleFormatter formatter = new AirstyleFormatter();
-/// String formatted = formatter.format(sourceCode);
-/// ```
 public class AirstyleFormatter
 {
     public static final int INDENTATION_SIZE = 4;
@@ -80,6 +75,18 @@ public class AirstyleFormatter
     public static final String CONTINUATION_INDENT = " ".repeat(CONTINUATION_INDENT_SIZE);
 
     private static final List<FormatPhase> PHASE_REGISTRY = createPhaseRegistry();
+
+    private final boolean rewriteUnusedLambdaParameters;
+
+    public AirstyleFormatter()
+    {
+        this(true);
+    }
+
+    public AirstyleFormatter(boolean rewriteUnusedLambdaParameters)
+    {
+        this.rewriteUnusedLambdaParameters = rewriteUnusedLambdaParameters;
+    }
 
     /// Formats Java source code.
     ///
@@ -122,11 +129,11 @@ public class AirstyleFormatter
         }
     }
 
-    private static String applyPhases(String source, PhaseContext context, PhaseStage stage)
+    private String applyPhases(String source, PhaseContext context, PhaseStage stage)
     {
         String current = source;
         for (FormatPhase phase : PHASE_REGISTRY) {
-            if (phase.stage() != stage) {
+            if (phase.stage() != stage || !isPhaseEnabled(phase)) {
                 continue;
             }
             String after = phase.apply(current, context);
@@ -136,6 +143,14 @@ public class AirstyleFormatter
             current = after;
         }
         return current;
+    }
+
+    private boolean isPhaseEnabled(FormatPhase phase)
+    {
+        return switch (phase.name()) {
+            case "unusedLambdaParameter" -> rewriteUnusedLambdaParameters;
+            default -> true;
+        };
     }
 
     private static String ensureTrailingNewline(String source)

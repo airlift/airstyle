@@ -16,6 +16,7 @@ package io.airlift.airstyle;
 import org.junit.jupiter.api.Test;
 
 import static io.airlift.airstyle.FormatterAssertions.assertFormatsOldToNew;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestEmptyLambdaBodySpacingFormatting
 {
@@ -83,5 +84,33 @@ public class TestEmptyLambdaBodySpacingFormatting
                 """;
 
         assertFormatsOldToNew(code, code);
+    }
+
+    @Test
+    void testFormatterKeepsUnusedLambdaParameterWhenRewriteDisabled()
+    {
+        String oldCode =
+                """
+                class Test {
+                    Object run(java.util.function.Function<String, String> function) {
+                        return function.apply("value").transform(value -> "constant");
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    Object run(java.util.function.Function<String, String> function)
+                    {
+                        return function.apply("value").transform(value -> "constant");
+                    }
+                }
+                """;
+
+        AirstyleFormatter formatter = new AirstyleFormatter(false);
+        assertEquals(newCode, formatter.format(oldCode));
+        assertEquals(newCode, formatter.format(newCode), "Formatting is not idempotent");
     }
 }

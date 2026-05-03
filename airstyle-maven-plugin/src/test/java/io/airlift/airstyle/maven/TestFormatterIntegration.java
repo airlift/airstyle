@@ -32,6 +32,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @MavenVersions({"3.9.11", "3.9.15"})
 class TestFormatterIntegration
 {
+    private static final String LICENSE_HEADER =
+            """
+            /*
+             * Licensed under the Apache License, Version 2.0 (the "License");
+             * you may not use this file except in compliance with the License.
+             * You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             */
+            """;
+
     @RegisterExtension
     private final TestResources5 resources = new TestResources5();
 
@@ -66,21 +83,8 @@ class TestFormatterIntegration
 
         String formatted = Files.readString(sourceFile);
         assertThat(formatted).isNotEqualTo(original);
-        assertThat(formatted).isEqualTo(
+        assertThat(formatted).isEqualTo(LICENSE_HEADER +
                 """
-                /*
-                 * Licensed under the Apache License, Version 2.0 (the "License");
-                 * you may not use this file except in compliance with the License.
-                 * You may obtain a copy of the License at
-                 *
-                 *     http://www.apache.org/licenses/LICENSE-2.0
-                 *
-                 * Unless required by applicable law or agreed to in writing, software
-                 * distributed under the License is distributed on an "AS IS" BASIS,
-                 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-                 * See the License for the specific language governing permissions and
-                 * limitations under the License.
-                 */
                 package test;
 
                 public class Simple
@@ -96,10 +100,50 @@ class TestFormatterIntegration
     }
 
     @MavenPluginTest
+    void testFormatMojoKeepsUnusedLambdaParameterWhenRewriteDisabled()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("format-keeps-unused-lambda-parameter");
+        Path sourceFile = basedir.toPath().resolve("src/main/java/test/Simple.java");
+        String original = Files.readString(sourceFile);
+
+        maven.forProject(basedir)
+                .execute("process-sources")
+                .assertErrorFreeLog();
+
+        String formatted = Files.readString(sourceFile);
+        assertThat(formatted).isNotEqualTo(original);
+        assertThat(formatted).isEqualTo(LICENSE_HEADER +
+                """
+                package test;
+
+                public class Simple
+                {
+                    public Object run(java.util.function.Function<String, String> function)
+                    {
+                        return function.apply("value").transform(value -> "constant");
+                    }
+                }
+                """);
+    }
+
+    @MavenPluginTest
     void testCheckMojoPassesFormattedProject()
             throws Exception
     {
         File basedir = resources.getBasedir("check-passes");
+
+        maven.forProject(basedir)
+                .execute("verify")
+                .assertErrorFreeLog()
+                .assertLogText("All 1 files are already formatted");
+    }
+
+    @MavenPluginTest
+    void testCheckMojoAllowsUnusedLambdaParameterWhenRewriteDisabled()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("check-passes-unused-lambda-parameter");
 
         maven.forProject(basedir)
                 .execute("verify")

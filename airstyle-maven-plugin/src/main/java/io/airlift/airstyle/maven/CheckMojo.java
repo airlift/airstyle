@@ -64,7 +64,8 @@ public class CheckMojo
             return;
         }
 
-        FileProcessor<CheckResult> processor = file -> new CheckResult(file, needsFormatting(new AirstyleFormatter(), file));
+        AirstyleFormatter formatter = createFormatter();
+        FileProcessor<CheckResult> processor = file -> new CheckResult(file, needsFormatting(formatter, file));
         List<Path> filesNeedingFormatting = processFiles(allJavaFiles, "checking", processor).stream()
                 .filter(CheckResult::needsFormatting)
                 .map(CheckResult::file)
