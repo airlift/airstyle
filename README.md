@@ -70,6 +70,7 @@ These parameters are shared by `check` and `format`:
 | `<includeTestSources>`    | Include test source roots.<br>**Default:** `true`<br>**User Property:** `airstyle.includeTestSources`                                |
 | `<parallel>`              | Process files in parallel.<br>**Default:** `true`<br>**User Property:** `airstyle.parallel`                                          |
 | `<skip>`                  | Skip goal execution.<br>**Default:** `false`<br>**User Property:** `airstyle.skip`                                                   |
+| `<rewriteUnusedLambdaParameters>` | Rewrite unused lambda parameters to Java's unnamed variable `_`. Set to `false` for Java 21 and older projects.<br>**Default:** `true`<br>**User Property:** `airstyle.rewriteUnusedLambdaParameters` |
 
 ### `check` Parameters
 

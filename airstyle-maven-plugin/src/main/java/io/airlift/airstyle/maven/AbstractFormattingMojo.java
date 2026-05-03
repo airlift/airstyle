@@ -13,6 +13,7 @@
  */
 package io.airlift.airstyle.maven;
 
+import io.airlift.airstyle.AirstyleFormatter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -82,9 +83,21 @@ public abstract class AbstractFormattingMojo
     @Parameter(property = "airstyle.parallel", defaultValue = "true")
     protected boolean parallel;
 
+    /**
+     * Rewrite unused lambda parameters to Java's unnamed variable {@code _}.
+     * Set to {@code false} for Java 21 and older projects.
+     */
+    @Parameter(property = "airstyle.rewriteUnusedLambdaParameters", defaultValue = "true")
+    protected boolean rewriteUnusedLambdaParameters;
+
     protected final boolean isSkip()
     {
         return skip;
+    }
+
+    protected final AirstyleFormatter createFormatter()
+    {
+        return new AirstyleFormatter(rewriteUnusedLambdaParameters);
     }
 
     protected final List<Path> collectSourceDirectories()
