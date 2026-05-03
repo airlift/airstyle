@@ -115,7 +115,7 @@ class TestFormatterIntegration
 
         maven.forProject(basedir)
                 .execute("verify")
-                .assertLogText("Found 1 file(s) that need formatting")
+                .assertLogText("Found 1 file(s) that need formatting. Run `mvn airstyle:format` to apply the required changes.")
                 .assertLogText("BadlyFormatted.java")
                 .assertNoLogText("BUILD SUCCESS");
     }

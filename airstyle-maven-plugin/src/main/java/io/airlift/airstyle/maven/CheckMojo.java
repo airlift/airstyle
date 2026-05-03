@@ -35,6 +35,8 @@ import java.util.List;
 public class CheckMojo
         extends AbstractFormattingMojo
 {
+    private static final String FORMAT_HINT = "Run `mvn airstyle:format` to apply the required changes.";
+
     /**
      * Whether to fail the build if files needing formatting are found.
      */
@@ -79,10 +81,11 @@ public class CheckMojo
         for (Path file : filesNeedingFormatting) {
             getLog().warn("  " + file);
         }
-        getLog().warn("Run `mvn airstyle:format` to apply the required changes.");
+        getLog().warn(FORMAT_HINT);
 
         if (failOnViolation) {
-            throw new MojoFailureException("Found " + filesNeedingFormatting.size() + " file(s) that need formatting.");
+            throw new MojoFailureException("Found %s file(s) that need formatting. %s"
+                    .formatted(filesNeedingFormatting.size(), FORMAT_HINT));
         }
     }
 
