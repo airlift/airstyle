@@ -202,7 +202,7 @@ public class TestModifierAnnotationLineBreakNormalizer
                 @Deprecated
                 enum Kind
                 {
-                    A,
+                    A
                 }
 
                 @Deprecated

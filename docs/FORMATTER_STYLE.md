@@ -162,6 +162,12 @@ return enabled
 - If two items are already wrapped, keep them wrapped.
 - If two items are already inline and no rewrite is needed, keep the source order.
 
+## Enums
+
+- Wrapped simple enums with two or more constants use a trailing comma.
+- Compact simple enums preserve the existing trailing-comma choice.
+- Single-constant enums do not use a trailing comma.
+
 ## Map Factory Calls
 
 - `Map.of(...)`, `ImmutableMap.of(...)`, `ImmutableListMultimap.of(...)`, and OpenTelemetry `Attributes.of(...)` treat wrapped arguments as key/value pairs.

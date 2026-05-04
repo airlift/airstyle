@@ -45,6 +45,86 @@ public class TestEnumSemicolonNormalizer
     }
 
     @Test
+    void testFormatterFixesUnnecessarySemicolonInEnumWithSingleConstantWithoutTrailingComma()
+    {
+        String oldCode =
+                """
+                enum State
+                {
+                    INITIALIZED;
+                }
+                """;
+
+        String newCode =
+                """
+                enum State
+                {
+                    INITIALIZED
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsSingleConstantEnumWithoutTrailingComma()
+    {
+        String code =
+                """
+                enum State
+                {
+                    INITIALIZED
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterFixesTrailingCommaInEnumWithSingleConstant()
+    {
+        String oldCode =
+                """
+                enum State
+                {
+                    INITIALIZED,
+                }
+                """;
+
+        String newCode =
+                """
+                enum State
+                {
+                    INITIALIZED
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterFixesTrailingCommaInEnumWithSingleConstantAndTrailingComment()
+    {
+        String oldCode =
+                """
+                enum State
+                {
+                    INITIALIZED, // trailing
+                }
+                """;
+
+        String newCode =
+                """
+                enum State
+                {
+                    INITIALIZED // trailing
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterKeepsSemicolonInEnumWithMembers()
     {
         String oldCode =
@@ -70,6 +150,7 @@ public class TestEnumSemicolonNormalizer
                 """
                 enum State
                 {
+                    UNINITIALIZED,
                     INITIALIZED; // trailing
                 }
                 """;
@@ -78,7 +159,30 @@ public class TestEnumSemicolonNormalizer
                 """
                 enum State
                 {
+                    UNINITIALIZED,
                     INITIALIZED, // trailing
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterFixesUnnecessarySemicolonInEnumWithSingleConstantAndTrailingComment()
+    {
+        String oldCode =
+                """
+                enum State
+                {
+                    INITIALIZED; // trailing
+                }
+                """;
+
+        String newCode =
+                """
+                enum State
+                {
+                    INITIALIZED // trailing
                 }
                 """;
 
@@ -92,6 +196,7 @@ public class TestEnumSemicolonNormalizer
                 """
                 enum State
                 {
+                    UNINITIALIZED,
                     INITIALIZED; /* trailing ; marker */
                 }
                 """;
@@ -100,7 +205,30 @@ public class TestEnumSemicolonNormalizer
                 """
                 enum State
                 {
+                    UNINITIALIZED,
                     INITIALIZED, /* trailing ; marker */
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterFixesUnnecessarySemicolonInEnumWithSingleConstantAndTrailingBlockComment()
+    {
+        String oldCode =
+                """
+                enum State
+                {
+                    INITIALIZED; /* trailing ; marker */
+                }
+                """;
+
+        String newCode =
+                """
+                enum State
+                {
+                    INITIALIZED /* trailing ; marker */
                 }
                 """;
 

@@ -149,7 +149,7 @@ public final class EnumDeclarationNormalizer
         List<EnumConstantDeclaration> constants = layout.constants();
 
         if (shouldUseInlineConstants(layout)) {
-            return constantIndent + inlineConstantsLine(sourceModel, constants) + (layout.hasTrailingComma() ? "," : "");
+            return constantIndent + inlineConstantsLine(sourceModel, constants) + (shouldPreserveTrailingComma(layout) ? "," : "");
         }
 
         StringBuilder result = new StringBuilder();
@@ -162,7 +162,7 @@ public final class EnumDeclarationNormalizer
             }
             result.append(constantIndent)
                     .append(constantText(sourceModel, constants.get(i)));
-            if (i < constants.size() - 1 || !layout.hasBodyDeclarations()) {
+            if (i < constants.size() - 1 || shouldPreserveTrailingComma(layout)) {
                 result.append(',');
             }
         }
@@ -255,5 +255,10 @@ public final class EnumDeclarationNormalizer
     private static boolean shouldUseInlineConstants(LiteralLayoutModel.EnumLayout layout)
     {
         return layout.allConstantsOnSameLine();
+    }
+
+    private static boolean shouldPreserveTrailingComma(LiteralLayoutModel.EnumLayout layout)
+    {
+        return !layout.hasBodyDeclarations() && layout.constants().size() > 1 && layout.hasTrailingComma();
     }
 }

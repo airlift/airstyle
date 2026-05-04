@@ -343,6 +343,31 @@ public class TestTypeBraceFormatting
     }
 
     @Test
+    void testFormatterFixesSingleLineSingleConstantEnumDeclarationWithoutTrailingComma()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    private enum State { INITIALIZED }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    private enum State
+                    {
+                        INITIALIZED
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterFixesMixedWrappedEnumConstantsAndRemovesTrailingSemicolon()
     {
         String oldCode =

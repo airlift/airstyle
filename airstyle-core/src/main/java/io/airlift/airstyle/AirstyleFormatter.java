@@ -225,7 +225,6 @@ public class AirstyleFormatter
         phases.add(phase("emptyStatement", PhaseStage.PRE_FORMAT, EmptyStatementNormalizer::normalize));
         phases.add(phase("outerTypeSemicolon", PhaseStage.PRE_FORMAT, OuterTypeSemicolonNormalizer::normalize));
         phases.add(phase("typeMemberSemicolon", PhaseStage.PRE_FORMAT, TypeMemberSemicolonNormalizer::normalize));
-        phases.add(phase("enumSemicolon", PhaseStage.PRE_FORMAT, EnumSemicolonNormalizer::normalize));
         phases.add(phase("tryWithResourcesSemicolon", PhaseStage.PRE_FORMAT, TryWithResourcesSemicolonNormalizer::normalize));
         phases.add(phase("unusedLambdaParameter", PhaseStage.PRE_FORMAT, UnusedLambdaParameterNormalizer::normalize));
         phases.add(phase("lambdaParameterParentheses", PhaseStage.PRE_FORMAT, LambdaParameterParenthesesNormalizer::normalize));
@@ -247,6 +246,7 @@ public class AirstyleFormatter
         phases.add(phase("organizeImports", PhaseStage.PRE_FORMAT, AirstyleImportOrganizer::organizeImports));
         phases.add(phase("arrayInitializerBlankLine", PhaseStage.PRE_FORMAT, ArrayInitializerBlankLineNormalizer::normalize));
         phases.add(phase("enumDeclaration", PhaseStage.PRE_FORMAT, EnumDeclarationNormalizer::normalize));
+        phases.add(phase("enumSemicolon", PhaseStage.PRE_FORMAT, EnumSemicolonNormalizer::normalize));
         phases.add(phase("wrappedListPreFormat", PhaseStage.PRE_FORMAT, WrappedListNormalizer::normalize));
         phases.add(phase("typeHierarchyClause", PhaseStage.PRE_FORMAT, TypeHierarchyClauseNormalizer::normalize));
         phases.add(phase("genericTypeArgument", PhaseStage.PRE_FORMAT, GenericTypeArgumentNormalizer::normalize));
