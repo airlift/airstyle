@@ -1314,6 +1314,709 @@ public class TestTextBlockFormatting
     }
 
     @Test
+    void testFormatterFixesFieldInitializerTextBlockWithIndentedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String policy =
+                            \"""
+                        abc
+                        xyz
+                            \""";
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String policy =
+                            \"""
+                            abc
+                            xyz
+                            \""";
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesFieldInitializerTextBlockWithContentAlignedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String policy =
+                            \"""
+                        abc
+                        xyz
+                        \""";
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String policy =
+                            \"""
+                            abc
+                            xyz
+                            \""";
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesLocalAssignmentTextBlockWithIndentedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc
+                            xyz
+                                \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc
+                                xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesLocalAssignmentTextBlockWithContentAlignedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc
+                            xyz
+                            \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc
+                                xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesWrappedArgumentTextBlockWithIndentedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        query(
+                                \"""
+                            abc
+                            xyz
+                                \""",
+                                name());
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        query(
+                                \"""
+                                abc
+                                xyz
+                                \""",
+                                name());
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesWrappedArgumentTextBlockWithContentAlignedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        query(
+                                \"""
+                            abc
+                            xyz
+                            \""",
+                                name());
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        query(
+                                \"""
+                                abc
+                                xyz
+                                \""",
+                                name());
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesReturnTextBlockWithIndentedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return
+                                \"""
+                            abc
+                            xyz
+                                \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return
+                                \"""
+                                abc
+                                xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesReturnTextBlockWithContentAlignedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return
+                                \"""
+                            abc
+                            xyz
+                            \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return
+                                \"""
+                                abc
+                                xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesYieldTextBlockWithIndentedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String value(int input)
+                    {
+                        return switch (input) {
+                            default -> {
+                                yield
+                                        \"""
+                                    abc
+                                    xyz
+                                        \""";
+                            }
+                        };
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String value(int input)
+                    {
+                        return switch (input) {
+                            default -> {
+                                yield
+                                        \"""
+                                        abc
+                                        xyz
+                                        \""";
+                            }
+                        };
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesYieldTextBlockWithContentAlignedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String value(int input)
+                    {
+                        return switch (input) {
+                            default -> {
+                                yield
+                                        \"""
+                                    abc
+                                    xyz
+                                    \""";
+                            }
+                        };
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String value(int input)
+                    {
+                        return switch (input) {
+                            default -> {
+                                yield
+                                        \"""
+                                        abc
+                                        xyz
+                                        \""";
+                            }
+                        };
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesTextBlockWithEssentialIndentation()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc
+                                xyz
+                            \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc
+                                    xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesTextBlockWhenClosingDelimiterDefinesIndentBaseline()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                    abc
+                                    xyz
+                            \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                        abc
+                                        xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesTextBlockWithLineContinuationEscapes()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc\\
+                             xyz\\
+                                \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc\\
+                                 xyz\\
+                                 \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesTextBlockWithAttachedClosingDelimiter()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc
+                                xyz\""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc
+                                    xyz\""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterKeepsFieldTextBlockWithAttachedClosingDelimiterAndSelector()
+    {
+        String code =
+                """
+                class Test
+                {
+                    int size =
+                            \"""
+                            abc
+                              xyz\""".length();
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsWrappedAssertUpdateSingleRowTextBlockWithAttachedClosingDelimiterAndSelector()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void test()
+                    {
+                        assertUpdate(
+                                \"""
+                                INSERT INTO %s
+                                VALUES
+                                    (DATE '2023-01-01' , false, 2023)\""".formatted(name),
+                                1);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsWrappedAssertUpdateTwoRowTextBlockWithAttachedClosingDelimiterAndSelector()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void test()
+                    {
+                        assertUpdate(
+                                \"""
+                                INSERT INTO %s
+                                VALUES
+                                    (DATE '2023-01-02' , true, 2023),
+                                    (DATE '2023-01-01' , false, 2023)\""".formatted(name),
+                                1);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsWrappedExecuteQuerySingleRowTextBlockWithAttachedClosingDelimiterAndSelector()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void test()
+                    {
+                        executeQuery(
+                                \"""
+                                INSERT INTO %s
+                                VALUES
+                                    (DATE '2023-01-01' , false, 2023)\""".formatted(name));
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsWrappedExecuteQueryTwoRowTextBlockWithAttachedClosingDelimiterAndSelector()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void test()
+                    {
+                        executeQuery(
+                                \"""
+                                INSERT INTO %s
+                                VALUES
+                                    (DATE '2023-01-02' , true, 2023),
+                                    (DATE '2023-01-01' , false, 2023)\""".formatted(name));
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterFixesTextBlockWithEssentialTabIndentation()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc
+                            \txyz
+                            \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc
+                                \txyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterFixesTextBlockWithEssentialFormFeedIndentation()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                            abc
+                            \fxyz
+                            \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String policy =
+                                \"""
+                                abc
+                                \fxyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
     void testFormatterFixesTextBlockLeftMarginForPipePrefixedContent()
     {
         String oldCode =

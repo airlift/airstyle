@@ -118,10 +118,11 @@ public final class TextBlockMarginNormalizer
         if (addInlineTextBlockIndentReplacements(sourceModel, node, replacements)) {
             return;
         }
+
         if (!isSelectorAttached(node)) {
             return;
         }
-        if (!startsMidLine(sourceModel, start)) {
+        if (!sourceModel.startsMidLine(start)) {
             return;
         }
 
@@ -136,49 +137,19 @@ public final class TextBlockMarginNormalizer
         // `readValue("""content""".formatted(x), ...)`): align content to
         // the column of the opening `"""`, matching IntelliJ's
         // TextBlockBlock output where each inner line's first char sits
-        // directly under the first `"` of `"""`. (For the non-selector
-        // path, the early-return at line 124 above means we only reach
-        // here when isSelectorAttached(node) is true.)
+        // directly under the first `"` of `"""`.
         int targetMinimumIndentWidth = start - openLineStart;
 
-        List<SourceModel.TextBlockLine> nonBlankLines = new ArrayList<>();
-        int minimumIndentWidth = Integer.MAX_VALUE;
-        for (SourceModel.TextBlockLine line : sourceModel.textBlockLines(node)) {
-            if (line.blank()) {
-                continue;
-            }
-            nonBlankLines.add(line);
-            minimumIndentWidth = Math.min(minimumIndentWidth, line.indentWidth());
-        }
-
+        List<SourceModel.TextBlockLine> nonBlankLines = nonBlankLines(sourceModel.textBlockLines(node));
         if (nonBlankLines.isEmpty()) {
             restoreOriginalClosingIndent(sourceModel, node, originalSourceModel, originalNode, replacements);
             restoreOriginalSelectorLineIndent(sourceModel, node, originalSourceModel, originalNode, replacements);
             return;
         }
-        if (minimumIndentWidth == targetMinimumIndentWidth) {
-            // Already aligned — no shift needed.
+        if (minimumIndentWidth(nonBlankLines) == targetMinimumIndentWidth) {
             return;
         }
-
-        // Shift all lines by the same amount so the min aligns to target.
-        // Positive shiftWidth: lines need to move LEFT (were too deep).
-        // Negative shiftWidth: lines need to move RIGHT (were too shallow).
-        int shiftWidth = minimumIndentWidth - targetMinimumIndentWidth;
-        if (shiftWidth > 0) {
-            // Shifting left — every line must have at least shiftWidth leading
-            // spaces; otherwise the shift would clip real content.
-            for (SourceModel.TextBlockLine line : nonBlankLines) {
-                if (line.indentWidth() < shiftWidth) {
-                    return;
-                }
-            }
-        }
-
-        for (SourceModel.TextBlockLine line : nonBlankLines) {
-            int targetIndentWidth = max(0, line.indentWidth() - shiftWidth);
-            replacements.add(new Replacement(line.lineStart(), line.firstNonWhitespace(), " ".repeat(targetIndentWidth)));
-        }
+        addShiftedLineIndentReplacements(nonBlankLines, targetMinimumIndentWidth, replacements);
         restoreOriginalClosingIndent(sourceModel, node, originalSourceModel, originalNode, replacements);
         restoreOriginalSelectorLineIndent(sourceModel, node, originalSourceModel, originalNode, replacements);
     }
@@ -191,35 +162,26 @@ public final class TextBlockMarginNormalizer
         }
 
         Expression hostExpression = leadingTextBlockHostExpression(sourceModel, node);
-        ASTNode contextNode = hostExpression != null ? hostExpression : node;
-        ParenthesizedListLayoutModel.ParenthesizedListContext context = wrappedArgumentContext(sourceModel, contextNode);
+        ParenthesizedListLayoutModel.ParenthesizedListContext context = wrappedArgumentContext(sourceModel, hostExpression);
         if (context == null
                 || context.itemStartsInlineInParent()) {
             return;
         }
 
         int expectedIndentWidth = sourceModel.indentWidth(sourceModel.lineStart(start), start);
-        if (hostExpression != null
-                && !hostExpression.equals(node)
+        if (!hostExpression.equals(node)
                 && hostExpression.getStartPosition() >= 0
                 && sourceModel.lineStart(hostExpression.getStartPosition()) != sourceModel.lineStart(start)) {
             int hostLineStart = sourceModel.lineStart(hostExpression.getStartPosition());
             int hostIndentWidth = sourceModel.indentWidth(hostLineStart, hostExpression.getStartPosition());
             expectedIndentWidth = max(expectedIndentWidth, hostIndentWidth + CONTINUATION_INDENT_SIZE);
         }
-        boolean preserveOriginalLiteralMargin = hostExpression == null
-                || !hostExpression.equals(node)
-                || node.getParent() instanceof InfixExpression;
-        if (isSelectorAttached(node)) {
-            preserveOriginalLiteralMargin = false;
-        }
+        boolean preserveOriginalLiteralMargin = !isSelectorAttached(node)
+                && (!hostExpression.equals(node)
+                || node.getParent() instanceof InfixExpression);
         if (preserveOriginalLiteralMargin
-                && originalNode != null
-                && originalSourceModel.startsAtLineIndent(originalNode.getStartPosition())) {
+                && originalStartsAtLineIndent(originalSourceModel, originalNode)) {
             if (addTranslatedOriginalMarginReplacements(sourceModel, node, originalSourceModel, originalNode, expectedIndentWidth, replacements)) {
-                if (isSelectorAttached(node)) {
-                    replaceClosingIndent(sourceModel, node, expectedIndentWidth, replacements);
-                }
                 return;
             }
         }
@@ -234,7 +196,7 @@ public final class TextBlockMarginNormalizer
 
         int start = node.getStartPosition();
         int end = start + node.getLength();
-        if (!startsMidLine(sourceModel, start)) {
+        if (!sourceModel.startsMidLine(start)) {
             return false;
         }
 
@@ -257,9 +219,6 @@ public final class TextBlockMarginNormalizer
         }
 
         Expression hostExpression = leadingTextBlockHostExpression(sourceModel, node);
-        if (hostExpression == null) {
-            return;
-        }
         if (!(hostExpression.getParent() instanceof VariableDeclarationFragment fragment && Objects.equals(fragment.getInitializer(), hostExpression))
                 && !(hostExpression.getParent() instanceof Assignment assignment && Objects.equals(assignment.getRightHandSide(), hostExpression))) {
             return;
@@ -267,10 +226,8 @@ public final class TextBlockMarginNormalizer
 
         int expectedIndentWidth = sourceModel.indentWidth(sourceModel.lineStart(start), start);
         if (!isSelectorAttached(node)
-                && originalNode != null
-                && originalSourceModel.startsAtLineIndent(originalNode.getStartPosition())) {
+                && originalStartsAtLineIndent(originalSourceModel, originalNode)) {
             if (addTranslatedOriginalMarginReplacements(sourceModel, node, originalSourceModel, originalNode, expectedIndentWidth, replacements)) {
-                preserveOriginalDeeperClosingIndentForAssignment(sourceModel, node, originalSourceModel, originalNode, expectedIndentWidth, replacements);
                 return;
             }
         }
@@ -289,9 +246,6 @@ public final class TextBlockMarginNormalizer
         }
 
         Expression hostExpression = leadingTextBlockHostExpression(sourceModel, node);
-        if (hostExpression == null) {
-            return;
-        }
         if (!(hostExpression.getParent() instanceof ReturnStatement returnStatement && Objects.equals(returnStatement.getExpression(), hostExpression))
                 && !(hostExpression.getParent() instanceof YieldStatement yieldStatement && Objects.equals(yieldStatement.getExpression(), hostExpression))) {
             return;
@@ -301,8 +255,7 @@ public final class TextBlockMarginNormalizer
         int statementIndentEnd = sourceModel.firstNonWhitespace(statementLineStart, sourceModel.lineEnd(statementLineStart));
         int expectedIndentWidth = max(0, sourceModel.indentWidth(statementLineStart, statementIndentEnd) + CONTINUATION_INDENT_SIZE);
         if (!isSelectorAttached(node)
-                && originalNode != null
-                && originalSourceModel.startsAtLineIndent(originalNode.getStartPosition())) {
+                && originalStartsAtLineIndent(originalSourceModel, originalNode)) {
             if (addTranslatedOriginalMarginReplacements(sourceModel, node, originalSourceModel, originalNode, expectedIndentWidth, replacements)) {
                 return;
             }
@@ -311,9 +264,8 @@ public final class TextBlockMarginNormalizer
         addTextBlockLineIndentReplacements(sourceModel, node, expectedIndentWidth, replacements);
     }
 
-    /// Handle inline text blocks in return/yield statements: `return """..."""`
-    /// where the opening delimiter is on the same line as the keyword.
-    /// Content should be aligned with the opening delimiter position.
+    /// Handles annotation values whose text block opening delimiter starts on
+    /// its own continuation-indented line.
     private static void addAnnotationOpeningIndentReplacement(SourceModel sourceModel, TextBlock node, List<Replacement> replacements)
     {
         int start = node.getStartPosition();
@@ -328,9 +280,6 @@ public final class TextBlockMarginNormalizer
 
         int currentLineStart = sourceModel.lineStart(start);
         int previousLineStart = sourceModel.lineStartForLine(lineNumber - 1);
-        if (previousLineStart < 0) {
-            return;
-        }
 
         String expectedIndent = sourceModel.lineIndent(previousLineStart) + CONTINUATION_INDENT;
         String currentIndent = sourceModel.source().substring(currentLineStart, start);
@@ -356,61 +305,53 @@ public final class TextBlockMarginNormalizer
     {
         SourceModel.TextBlockLine closingLine = sourceModel.textBlockClosingLine(node);
         int canonicalClosingIndentWidth = canonicalClosingIndentWidth(sourceModel, node, expectedIndentWidth);
-        if (closingLine != null && !closingLine.blank() && closingLine.indentWidth() != canonicalClosingIndentWidth) {
+        if (closingLine != null && closingLine.indentWidth() != canonicalClosingIndentWidth) {
             replacements.add(new Replacement(closingLine.lineStart(), closingLine.firstNonWhitespace(), " ".repeat(canonicalClosingIndentWidth)));
         }
     }
 
     private static void addTextBlockLineIndentReplacements(SourceModel sourceModel, TextBlock node, int expectedIndentWidth, List<Replacement> replacements)
     {
-        List<SourceModel.TextBlockLine> nonBlankLines = new ArrayList<>();
-        int minimumIndentWidth = Integer.MAX_VALUE;
-        for (SourceModel.TextBlockLine line : sourceModel.textBlockContentLines(node)) {
-            if (line.blank()) {
-                continue;
-            }
-            nonBlankLines.add(line);
-            minimumIndentWidth = Math.min(minimumIndentWidth, line.indentWidth());
-        }
-
-        if (!nonBlankLines.isEmpty() && minimumIndentWidth != expectedIndentWidth) {
-            int shiftWidth = expectedIndentWidth - minimumIndentWidth;
-            for (SourceModel.TextBlockLine line : nonBlankLines) {
-                int targetIndentWidth = line.indentWidth() + shiftWidth;
-                if (targetIndentWidth < 0) {
-                    return;
-                }
-                replacements.add(new Replacement(line.lineStart(), line.firstNonWhitespace(), " ".repeat(targetIndentWidth)));
-            }
-        }
-
+        addShiftedLineIndentReplacements(nonBlankLines(sourceModel.textBlockContentLines(node)), expectedIndentWidth, replacements);
         replaceClosingIndent(sourceModel, node, expectedIndentWidth, replacements);
     }
 
     private static void addLiteralPreservingTextBlockLineIndentReplacements(SourceModel sourceModel, TextBlock node, int expectedIndentWidth, List<Replacement> replacements)
     {
-        List<SourceModel.TextBlockLine> nonBlankLines = new ArrayList<>();
-        int minimumIndentWidth = Integer.MAX_VALUE;
-        for (SourceModel.TextBlockLine line : sourceModel.textBlockLines(node)) {
-            if (line.blank()) {
-                continue;
-            }
-            nonBlankLines.add(line);
-            minimumIndentWidth = Math.min(minimumIndentWidth, line.indentWidth());
-        }
+        addShiftedLineIndentReplacements(nonBlankLines(sourceModel.textBlockLines(node)), expectedIndentWidth, replacements);
+    }
 
-        if (nonBlankLines.isEmpty() || minimumIndentWidth == expectedIndentWidth) {
+    private static void addShiftedLineIndentReplacements(List<SourceModel.TextBlockLine> nonBlankLines, int targetMinimumIndentWidth, List<Replacement> replacements)
+    {
+        if (nonBlankLines.isEmpty()) {
             return;
         }
 
-        int shiftWidth = expectedIndentWidth - minimumIndentWidth;
+        int minimumIndentWidth = minimumIndentWidth(nonBlankLines);
+        if (minimumIndentWidth == targetMinimumIndentWidth) {
+            return;
+        }
+
+        int shiftWidth = targetMinimumIndentWidth - minimumIndentWidth;
         for (SourceModel.TextBlockLine line : nonBlankLines) {
             int targetIndentWidth = line.indentWidth() + shiftWidth;
-            if (targetIndentWidth < 0) {
-                return;
-            }
             replacements.add(new Replacement(line.lineStart(), line.firstNonWhitespace(), " ".repeat(targetIndentWidth)));
         }
+    }
+
+    private static int minimumIndentWidth(List<SourceModel.TextBlockLine> nonBlankLines)
+    {
+        return nonBlankLines.stream()
+                .mapToInt(SourceModel.TextBlockLine::indentWidth)
+                .min()
+                .orElseThrow();
+    }
+
+    private static List<SourceModel.TextBlockLine> nonBlankLines(List<SourceModel.TextBlockLine> lines)
+    {
+        return lines.stream()
+                .filter(line -> !line.blank())
+                .toList();
     }
 
     private static boolean addTranslatedOriginalMarginReplacements(
@@ -421,10 +362,6 @@ public final class TextBlockMarginNormalizer
             int expectedOpeningIndentWidth,
             List<Replacement> replacements)
     {
-        if (originalNode == null) {
-            return false;
-        }
-
         List<Replacement> pendingReplacements = new ArrayList<>();
 
         int start = node.getStartPosition();
@@ -434,61 +371,141 @@ public final class TextBlockMarginNormalizer
             pendingReplacements.add(new Replacement(lineStart, start, " ".repeat(expectedOpeningIndentWidth)));
         }
 
-        int originalStart = originalNode.getStartPosition();
-        int originalLineStart = originalSourceModel.lineStart(originalStart);
-        int originalOpeningIndentWidth = originalSourceModel.indentWidth(originalLineStart, originalStart);
-        int shiftWidth = expectedOpeningIndentWidth - originalOpeningIndentWidth;
-
-        List<SourceModel.TextBlockLine> currentLines = sourceModel.textBlockLines(node);
-        List<SourceModel.TextBlockLine> originalLines = originalSourceModel.textBlockLines(originalNode);
-        if (currentLines.size() != originalLines.size()) {
+        TextBlockIndentPlan indentPlan = textBlockIndentPlan(sourceModel, node, originalSourceModel, originalNode, expectedOpeningIndentWidth);
+        if (indentPlan == null) {
             return false;
         }
 
-        for (int index = 0; index < currentLines.size(); index++) {
-            SourceModel.TextBlockLine currentLine = currentLines.get(index);
-            SourceModel.TextBlockLine originalLine = originalLines.get(index);
-            if (currentLine.blank() != originalLine.blank()) {
-                return false;
-            }
+        for (TextBlockLineIndent lineIndent : indentPlan.contentLineIndents()) {
+            replaceTextBlockLineIndent(sourceModel, node, lineIndent.currentLine(), lineIndent.targetIndent(), pendingReplacements);
         }
 
-        List<Integer> targetContentIndentWidths = new ArrayList<>();
-        for (int index = 0; index < currentLines.size(); index++) {
-            SourceModel.TextBlockLine currentLine = currentLines.get(index);
-            SourceModel.TextBlockLine originalLine = originalLines.get(index);
-            if (currentLine.blank()) {
-                continue;
-            }
-            int targetIndentWidth = originalLine.indentWidth() + shiftWidth;
-            if (targetIndentWidth < 0) {
-                return false;
-            }
-            if (index < currentLines.size() - 1) {
-                targetContentIndentWidths.add(targetIndentWidth);
-                if (currentLine.indentWidth() != targetIndentWidth) {
-                    pendingReplacements.add(new Replacement(currentLine.lineStart(), currentLine.firstNonWhitespace(), " ".repeat(targetIndentWidth)));
-                }
-            }
-        }
-        SourceModel.TextBlockLine currentClosingLine = sourceModel.textBlockClosingLine(node);
-        if (currentClosingLine != null && !currentClosingLine.blank()) {
-            int targetClosingIndentWidth = canonicalClosingIndentWidth(sourceModel, node, expectedOpeningIndentWidth, targetContentIndentWidths);
-            // If the current closing indent matches the original's translated indent
-            // AND is deeper than canonical, preserve it — the original had it deeper
-            // for a reason (e.g., assignment text blocks with indented content).
-            SourceModel.TextBlockLine originalClosingLine = originalSourceModel.textBlockClosingLine(originalNode);
-            int originalTargetClosingIndent = (originalClosingLine != null && !originalClosingLine.blank())
-                    ? originalClosingLine.indentWidth() + shiftWidth
-                    : -1;
-            boolean preserveOriginalDeeper = originalTargetClosingIndent > targetClosingIndentWidth
-                    && currentClosingLine.indentWidth() == originalTargetClosingIndent;
-            if (!preserveOriginalDeeper && currentClosingLine.indentWidth() != targetClosingIndentWidth) {
-                pendingReplacements.add(new Replacement(currentClosingLine.lineStart(), currentClosingLine.firstNonWhitespace(), " ".repeat(targetClosingIndentWidth)));
-            }
+        SourceModel.TextBlockLine closingLine = sourceModel.textBlockClosingLine(node);
+        if (closingLine != null) {
+            int targetClosingIndentWidth = canonicalClosingIndentWidth(
+                    sourceModel,
+                    node,
+                    indentPlan.targetMinimumIndentWidth(),
+                    indentPlan.contentLineIndents().stream()
+                            .map(line -> line.targetIndent().length())
+                            .toList());
+            replaceTextBlockLineIndent(sourceModel, node, closingLine, " ".repeat(targetClosingIndentWidth), pendingReplacements);
         }
         replacements.addAll(pendingReplacements);
         return true;
+    }
+
+    private static TextBlockIndentPlan textBlockIndentPlan(
+            SourceModel sourceModel,
+            TextBlock node,
+            SourceModel originalSourceModel,
+            TextBlock originalNode,
+            int expectedOpeningIndentWidth)
+    {
+        List<SourceModel.TextBlockLine> currentLines = sourceModel.textBlockLines(node);
+        List<SourceModel.TextBlockLine> originalLines = originalSourceModel.textBlockLines(originalNode);
+        if (currentLines.size() != originalLines.size()) {
+            return null;
+        }
+        for (int index = 0; index < currentLines.size(); index++) {
+            if (textBlockContentBlank(sourceModel, node, currentLines.get(index))
+                    != textBlockContentBlank(originalSourceModel, originalNode, originalLines.get(index))) {
+                return null;
+            }
+        }
+
+        int originalMinimumIndentWidth = textBlockJlsMinimumIndent(originalSourceModel, originalNode, originalLines);
+        if (originalMinimumIndentWidth < 0) {
+            return null;
+        }
+        int originalStart = originalNode.getStartPosition();
+        int originalLineStart = originalSourceModel.lineStart(originalStart);
+        int originalOpeningIndentWidth = originalSourceModel.indentWidth(originalLineStart, originalStart);
+        int targetMinimumIndentWidth = max(expectedOpeningIndentWidth, originalMinimumIndentWidth + expectedOpeningIndentWidth - originalOpeningIndentWidth);
+
+        SourceModel.TextBlockLine closingLine = sourceModel.textBlockClosingLine(node);
+        List<TextBlockLineIndent> contentLineIndents = new ArrayList<>();
+        for (int index = 0; index < currentLines.size(); index++) {
+            SourceModel.TextBlockLine originalLine = originalLines.get(index);
+            if (closingLine != null && index == currentLines.size() - 1) {
+                continue;
+            }
+            if (textBlockContentBlank(originalSourceModel, originalNode, originalLine)) {
+                continue;
+            }
+
+            String originalIndent = textBlockLeadingWhitespace(originalSourceModel, originalNode, originalLine);
+            String essentialIndent = originalIndent.substring(originalMinimumIndentWidth);
+            contentLineIndents.add(new TextBlockLineIndent(currentLines.get(index), " ".repeat(targetMinimumIndentWidth) + essentialIndent));
+        }
+        return new TextBlockIndentPlan(targetMinimumIndentWidth, List.copyOf(contentLineIndents));
+    }
+
+    private static void replaceTextBlockLineIndent(SourceModel sourceModel, TextBlock node, SourceModel.TextBlockLine line, String targetIndent, List<Replacement> replacements)
+    {
+        int currentIndentEnd = textBlockLeadingWhitespaceEnd(sourceModel, node, line);
+        String currentIndent = sourceModel.source().substring(line.lineStart(), currentIndentEnd);
+        if (!currentIndent.equals(targetIndent)) {
+            replacements.add(new Replacement(line.lineStart(), currentIndentEnd, targetIndent));
+        }
+    }
+
+    private static int textBlockJlsMinimumIndent(SourceModel sourceModel, TextBlock node, List<SourceModel.TextBlockLine> lines)
+    {
+        if (lines.isEmpty()) {
+            return -1;
+        }
+
+        int minimum = Integer.MAX_VALUE;
+        for (SourceModel.TextBlockLine line : lines) {
+            boolean lastLine = textBlockLineContainsClosingDelimiter(node, line);
+            if (!lastLine && textBlockContentBlank(sourceModel, node, line)) {
+                continue;
+            }
+            minimum = Math.min(minimum, textBlockLeadingWhitespace(sourceModel, node, line).length());
+        }
+        return minimum;
+    }
+
+    private static boolean textBlockContentBlank(SourceModel sourceModel, TextBlock node, SourceModel.TextBlockLine line)
+    {
+        int contentEnd = textBlockLineContentEnd(sourceModel, node, line);
+        return textBlockLeadingWhitespaceEnd(sourceModel, node, line) >= contentEnd;
+    }
+
+    private static String textBlockLeadingWhitespace(SourceModel sourceModel, TextBlock node, SourceModel.TextBlockLine line)
+    {
+        return sourceModel.source().substring(line.lineStart(), textBlockLeadingWhitespaceEnd(sourceModel, node, line));
+    }
+
+    private static int textBlockLeadingWhitespaceEnd(SourceModel sourceModel, TextBlock node, SourceModel.TextBlockLine line)
+    {
+        int contentEnd = textBlockLineContentEnd(sourceModel, node, line);
+        int index = line.lineStart();
+        while (index < contentEnd && Character.isWhitespace(sourceModel.source().charAt(index))) {
+            index++;
+        }
+        return index;
+    }
+
+    private static int textBlockLineContentEnd(SourceModel sourceModel, TextBlock node, SourceModel.TextBlockLine line)
+    {
+        int closingDelimiterStart = closingDelimiterStart(node);
+        if (line.lineStart() <= closingDelimiterStart && closingDelimiterStart <= line.lineEnd()) {
+            return closingDelimiterStart;
+        }
+        return line.lineEnd();
+    }
+
+    private static boolean textBlockLineContainsClosingDelimiter(TextBlock node, SourceModel.TextBlockLine line)
+    {
+        int closingDelimiterStart = closingDelimiterStart(node);
+        return line.lineStart() <= closingDelimiterStart && closingDelimiterStart <= line.lineEnd();
+    }
+
+    private static int closingDelimiterStart(TextBlock node)
+    {
+        return node.getStartPosition() + node.getLength() - 3;
     }
 
     private static void restoreOriginalClosingIndent(
@@ -504,7 +521,7 @@ public final class TextBlockMarginNormalizer
 
         SourceModel.TextBlockLine currentClosingLine = sourceModel.textBlockClosingLine(node);
         SourceModel.TextBlockLine originalClosingLine = originalSourceModel.textBlockClosingLine(originalNode);
-        if (currentClosingLine == null || originalClosingLine == null || currentClosingLine.blank() || originalClosingLine.blank()) {
+        if (currentClosingLine == null || originalClosingLine == null) {
             return;
         }
 
@@ -518,46 +535,10 @@ public final class TextBlockMarginNormalizer
         }
     }
 
-    private static void preserveOriginalDeeperClosingIndentForAssignment(
-            SourceModel sourceModel,
-            TextBlock node,
-            SourceModel originalSourceModel,
-            TextBlock originalNode,
-            int expectedOpeningIndentWidth,
-            List<Replacement> replacements)
-    {
-        if (originalNode == null) {
-            return;
-        }
-
-        SourceModel.TextBlockLine currentClosingLine = sourceModel.textBlockClosingLine(node);
-        SourceModel.TextBlockLine originalClosingLine = originalSourceModel.textBlockClosingLine(originalNode);
-        if (currentClosingLine == null || originalClosingLine == null || currentClosingLine.blank() || originalClosingLine.blank()) {
-            return;
-        }
-        if (originalClosingLine.indentWidth() <= expectedOpeningIndentWidth) {
-            return;
-        }
-        int originalOpeningIndentWidth = originalSourceModel.indentWidth(
-                originalSourceModel.lineStart(originalNode.getStartPosition()),
-                originalNode.getStartPosition());
-        int originalMinimumContentIndent = originalSourceModel.textBlockContentLines(originalNode).stream()
-                .filter(line -> !line.blank())
-                .mapToInt(SourceModel.TextBlockLine::indentWidth)
-                .min()
-                .orElse(originalOpeningIndentWidth);
-        if (originalMinimumContentIndent <= originalOpeningIndentWidth) {
-            return;
-        }
-        if (currentClosingLine.indentWidth() != originalClosingLine.indentWidth()) {
-            replacements.add(new Replacement(currentClosingLine.lineStart(), currentClosingLine.firstNonWhitespace(), " ".repeat(originalClosingLine.indentWidth())));
-        }
-    }
-
     private static int canonicalClosingIndentWidth(SourceModel sourceModel, TextBlock node, int expectedOpeningIndentWidth)
     {
         SourceModel.TextBlockLine closingLine = sourceModel.textBlockClosingLine(node);
-        if (closingLine == null || closingLine.blank()) {
+        if (closingLine == null) {
             return expectedOpeningIndentWidth;
         }
 
@@ -592,7 +573,7 @@ public final class TextBlockMarginNormalizer
                 .skip(1)
                 .mapToInt(Integer::intValue)
                 .min()
-                .orElse(expectedOpeningIndentWidth);
+                .orElseThrow();
         if (firstContentIndentWidth == expectedOpeningIndentWidth && laterMinimumIndentWidth > expectedOpeningIndentWidth) {
             return laterMinimumIndentWidth;
         }
@@ -604,11 +585,8 @@ public final class TextBlockMarginNormalizer
         List<SourceModel.TextBlockLine> nonBlankContentLines = sourceModel.textBlockContentLines(node).stream()
                 .filter(line -> !line.blank())
                 .toList();
-        if (nonBlankContentLines.isEmpty()) {
-            return false;
-        }
         for (SourceModel.TextBlockLine line : nonBlankContentLines) {
-            if (line.lineEnd() <= line.firstNonWhitespace() || sourceModel.source().charAt(line.lineEnd() - 1) != '\\') {
+            if (sourceModel.source().charAt(line.lineEnd() - 1) != '\\') {
                 return false;
             }
         }
@@ -625,9 +603,9 @@ public final class TextBlockMarginNormalizer
         if (!(node.getParent() instanceof MethodInvocation methodInvocation) || !Objects.equals(methodInvocation.getExpression(), node)) {
             return;
         }
-        if (!(originalNode != null
-                && originalNode.getParent() instanceof MethodInvocation originalInvocation
-                && Objects.equals(originalInvocation.getExpression(), originalNode))) {
+        if (originalNode == null
+                || !(originalNode.getParent() instanceof MethodInvocation originalInvocation)
+                || !Objects.equals(originalInvocation.getExpression(), originalNode)) {
             return;
         }
 
@@ -652,15 +630,16 @@ public final class TextBlockMarginNormalizer
         }
     }
 
-    private static boolean startsMidLine(SourceModel sourceModel, int position)
+    private static boolean originalStartsAtLineIndent(SourceModel originalSourceModel, TextBlock originalNode)
     {
-        return sourceModel.startsMidLine(position);
+        return originalNode != null
+                && originalSourceModel.startsAtLineIndent(originalNode.getStartPosition());
     }
 
     private static ParenthesizedListLayoutModel.ParenthesizedListContext wrappedArgumentContext(SourceModel sourceModel, ASTNode node)
     {
         ASTNode current = node;
-        while (current != null) {
+        while (true) {
             ParenthesizedListLayoutModel.ParenthesizedListContext context = ParenthesizedListLayoutModel.contextFor(sourceModel, current);
             if (context != null) {
                 return context;
@@ -672,7 +651,6 @@ public final class TextBlockMarginNormalizer
             }
             current = parent;
         }
-        return null;
     }
 
     private static Expression leadingTextBlockHostExpression(SourceModel sourceModel, TextBlock node)
@@ -700,4 +678,8 @@ public final class TextBlockMarginNormalizer
         }
         return false;
     }
+
+    private record TextBlockIndentPlan(int targetMinimumIndentWidth, List<TextBlockLineIndent> contentLineIndents) {}
+
+    private record TextBlockLineIndent(SourceModel.TextBlockLine currentLine, String targetIndent) {}
 }
