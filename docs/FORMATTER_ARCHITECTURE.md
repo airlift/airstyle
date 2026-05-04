@@ -12,7 +12,7 @@ For the style itself — what the output looks like — see [FORMATTER_STYLE.md]
 source
   → PRE_FORMAT  (imports, modifiers, braces, literals, wrapped-list argument canonicalization)
   → FORMAT      (engine: single phase, produces final indent + spacing)
-  → POST_FORMAT (brace/layout fixups, text block margin, cleanup)
+  → POST_FORMAT (brace/layout fixups, cleanup, comment/Javadoc normalization)
   → formatted source
 ```
 
@@ -60,7 +60,7 @@ These phases intentionally remain pre-format source canonicalizers rather than b
 - `SwitchRuleNormalizer` canonicalizes source-order cases that require token movement, such as standalone comments between `->` and the rule body.
 - `TypeHierarchyClauseNormalizer`, `GenericTypeArgumentNormalizer`, and `EnumDeclarationNormalizer` canonicalize declaration source shape before structural layout.
 
-Post-format normalizers must stay narrow and comment/literal-specific. Text-block margin alignment is source-sensitive because text block content is literal content, so it belongs in text-block leaf rendering or a final text-block-specific phase, not generic Java builders. Javadoc and markdown rewrites belong in comment formatting code, not `JavaBlockBuilder`. `formatCleanup` remains a safety net for trailing whitespace, tabs in whitespace, repeated spaces, block-boundary blank lines, and final newline handling until each concern is covered structurally.
+Post-format normalizers must stay narrow and comment/literal-specific. Text-block margin alignment is engine-owned: text block tokens are split into structural line leaves in `JavaTokenRunBuilder`, mirroring IntelliJ's `TextBlockBlock`, so content and closing-delimiter indentation is handled by normal `Indent` and `Spacing` rules. Javadoc and markdown rewrites belong in comment formatting code, not `JavaBlockBuilder`. `formatCleanup` remains a safety net for trailing whitespace, tabs in whitespace, repeated spaces, block-boundary blank lines, and final newline handling until each concern is covered structurally.
 
 Comment indentation is engine-owned; do not add a post-format comment indentation cleanup pass.
 
@@ -72,7 +72,8 @@ Comment indentation is engine-owned; do not add a post-format comment indentatio
 | Indentation, alignment, comments between Java constructs, or construct-local line breaks | `FORMAT` engine block tree |
 | Pairwise token spacing that applies generally | `JavaSpacingPolicy` or `JavaSpacingRules` |
 | Pairwise spacing that depends on a specific construct's child shape | The smallest relevant construct builder |
-| Text-block content margin, Javadoc content normalization, or final whitespace cleanup | Narrow `POST_FORMAT` normalizer or leaf rendering |
+| Text-block content margin | Structural text-block line leaves in `JavaTokenRunBuilder` |
+| Javadoc content normalization or final whitespace cleanup | Narrow `POST_FORMAT` normalizer or leaf rendering |
 
 Before adding a normalizer, check whether the desired output can be represented as children, `Indent`, and `Spacing`. If yes, build that structure in the engine. A normalizer is appropriate only when it changes the source token stream or protects literal/comment content that the block tree cannot safely rewrite.
 
