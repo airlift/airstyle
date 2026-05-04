@@ -873,6 +873,43 @@ public class TestTextBlockFormatting
     }
 
     @Test
+    void testFormatterKeepsWhitespaceOnlyTextBlockLineLiteralValue()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    String value()
+                    {
+                        return \"""
+                               first
+                                    \s
+                               second
+                               \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    String value()
+                    {
+                        return \"""
+                               first
+
+                               second
+                               \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
     void testReturnFormattedTextBlockStaysOnSameLine()
     {
         String code =

@@ -46,7 +46,6 @@ import io.airlift.airstyle.normalizer.RedundantModifierNormalizer;
 import io.airlift.airstyle.normalizer.StandaloneBlockBlankLineNormalizer;
 import io.airlift.airstyle.normalizer.StaticImportRuleNormalizer;
 import io.airlift.airstyle.normalizer.SwitchRuleNormalizer;
-import io.airlift.airstyle.normalizer.TextBlockMarginNormalizer;
 import io.airlift.airstyle.normalizer.TrailingCommentSpacingNormalizer;
 import io.airlift.airstyle.normalizer.TryWithResourcesSemicolonNormalizer;
 import io.airlift.airstyle.normalizer.TypeHierarchyClauseNormalizer;
@@ -257,7 +256,6 @@ public class AirstyleFormatter
         // POST_FORMAT: edge-case layout fixups the engine doesn't cover, comment/brace/blank-line adjustments, and cleanup.
         phases.add(phase("standaloneBlockBlankLine", PhaseStage.POST_FORMAT, StandaloneBlockBlankLineNormalizer::normalize));
         phases.add(phase("formatCleanup", PhaseStage.POST_FORMAT, AirstyleFormatter::applyFormatCleanup));
-        phases.add(phase("textBlockMargin", PhaseStage.POST_FORMAT, TextBlockMarginNormalizer::normalize));
         phases.add(phase("lineCommentJavadocSeparator", PhaseStage.POST_FORMAT, LineCommentJavadocSeparatorNormalizer::normalize));
         phases.add(phase("oneLineJavadoc", PhaseStage.POST_FORMAT, OneLineJavadocNormalizer::normalize));
         phases.add(phase("javadocBlockTagGroup", PhaseStage.POST_FORMAT, JavadocBlockTagGroupNormalizer::normalize));

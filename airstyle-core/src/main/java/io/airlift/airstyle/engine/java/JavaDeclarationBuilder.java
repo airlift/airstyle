@@ -1516,15 +1516,12 @@ final class JavaDeclarationBuilder
                 // directly, or as the leading-left receiver of a chain like
                 // {@code """...""".trim()} or {@code """...""".formatted(x)} —
                 // force it onto a new line at CONTINUATION so the Airlift
-                // "text block always starts on its own line" style is applied
-                // and the POST_FORMAT textBlockMargin phase can re-align
-                // content relative to the statement indent instead of the
-                // opening `"""` column.
+                // "text block always starts on its own line" style is applied.
                 Block initBlock;
                 Spacing initSpacing;
                 if (JavaBlockBuilder.leadingExpressionIsTextBlock(init)) {
                     Block textBlock = JavaBlock.builder(initStart, initEnd, "FieldTextBlock")
-                            .child(owner.buildTokensRange(initStart, initEnd, "FieldTextBlockTokens"))
+                            .child(owner.buildTokensRangePreservingTextBlockMargin(initStart, initEnd, "FieldTextBlockTokens"))
                             .build();
                     initBlock = owner.buildIndentedBodyWrapper(
                             "FieldTextBlockWrap",

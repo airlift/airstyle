@@ -1054,6 +1054,21 @@ public final class JavaBlockBuilder
         return tokenRunBuilder.buildTokensRange(start, end, debugName, canUseFirstChildIndent);
     }
 
+    Block buildTokensRangePreservingTextBlockMargin(int start, int end, String debugName)
+    {
+        return tokenRunBuilder.buildTokensRangePreservingTextBlockMargin(start, end, debugName, true);
+    }
+
+    Block buildTokensRangePreservingFullTextBlockMargin(int start, int end, String debugName)
+    {
+        return tokenRunBuilder.buildTokensRangePreservingFullTextBlockMargin(start, end, debugName, true);
+    }
+
+    Block buildTokensRangePreservingNegativeTextBlockMargin(int start, int end, String debugName)
+    {
+        return tokenRunBuilder.buildTokensRangePreservingNegativeTextBlockMargin(start, end, debugName, true);
+    }
+
     Block buildTokensRangeWithLineStartIndent(int start, int end, String debugName, Indent lineStartIndent)
     {
         return tokenRunBuilder.buildTokensRangeWithLineStartIndent(start, end, debugName, lineStartIndent);

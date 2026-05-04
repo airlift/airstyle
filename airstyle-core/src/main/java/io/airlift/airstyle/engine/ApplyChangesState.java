@@ -61,8 +61,9 @@ public final class ApplyChangesState
             // Replace the whitespace range with the rendered whitespace.
             result.append(whitespace.render());
             // Shift internal lines for multi-line block comments when their
-            // indent changed. Skip text blocks (""") — their content indent
-            // is managed by the textBlockMargin POST_FORMAT phase.
+            // indent changed. Text blocks are split into structural line
+            // leaves by JavaTokenRunBuilder, so each text-block line is
+            // indented through normal whitespace rendering.
             if (whitespace.containsLineFeeds() && leafText.contains("\n")
                     && !leafText.startsWith("\"\"\"")) {
                 leafText = shiftInternalLines(leafText, whitespace);

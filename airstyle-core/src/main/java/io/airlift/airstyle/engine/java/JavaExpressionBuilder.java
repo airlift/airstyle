@@ -196,7 +196,7 @@ final class JavaExpressionBuilder
         }
         Block textBlock = JavaBlock.builder(rhsStart, rhsEnd, "TextBlockBody")
                 .indent(Indent.continuationIndent())
-                .child(owner.buildTokensRange(rhsStart, rhsEnd, "TextBlockTokens"))
+                .child(owner.buildTokensRangePreservingTextBlockMargin(rhsStart, rhsEnd, "TextBlockTokens"))
                 .build();
         if (prev != null) {
             // Force a line break before the text block (CONTINUATION indent
@@ -320,8 +320,8 @@ final class JavaExpressionBuilder
         //     later args are on separate lines, "compact parent" pattern).
         // EXCEPTION: text block args — including chains whose leading-left
         //   receiver is a text block, like `foo("""…""".formatted(x), …)` —
-        //   always wrap onto their own line so the POST_FORMAT textBlockMargin
-        //   phase can re-align content at the wrapped arg indent.
+        //   always wrap onto their own line so structural text-block line
+        //   leaves can align content at the wrapped arg indent.
         boolean firstArgOnNewLine = sourceFirstArgOnNewLine
                 || (!arguments.isEmpty() && leadingExpressionIsTextBlock(arguments.getFirst()));
 
@@ -909,7 +909,8 @@ final class JavaExpressionBuilder
         if (expr instanceof LambdaExpression lambda && lambda.getBody() instanceof Expression bodyExpr) {
             int bodyStart = bodyExpr.getStartPosition();
             int bodyEnd = bodyStart + bodyExpr.getLength();
-            if (bodyExpr instanceof MethodInvocation bmi && isNontrivialChain(bmi)) {
+            if (bodyExpr instanceof MethodInvocation bmi
+                    && (isNontrivialChain(bmi) || leadingExpressionIsTextBlock(bmi))) {
                 return buildLambdaExpressionWithBody(lambda, start, end, bodyStart, bodyEnd, bmi);
             }
             // Text block as lambda body: force `params ->` then text block on
@@ -920,7 +921,7 @@ final class JavaExpressionBuilder
                 Block header = owner.buildTokensRange(start, headerEnd, "LambdaHeader");
                 lb.child(header);
                 Block tbBlock = JavaBlock.builder(bodyStart, end, "LambdaTextBlock")
-                        .child(owner.buildTokensRange(bodyStart, end, "LambdaTextBlockTokens"))
+                        .child(owner.buildTokensRangePreservingFullTextBlockMargin(bodyStart, end, "LambdaTextBlockTokens"))
                         .build();
                 Block body = buildLambdaBodyWrapper(headerEnd, bodyStart, end, tbBlock);
                 addSibling(lb, header, body, Spacing.createSpacing(0, 0, 1, false, 0));
@@ -1693,8 +1694,8 @@ final class JavaExpressionBuilder
                 // RELATIVE_INDENT_TYPES handling treats them consistently
                 // whether the operator is end-of-line or start-of-line.
                 Expression operand = (i == 1) ? right : (Expression) infix.extendedOperands().get(i - 2);
-                // Text block operands always land on their own line so the
-                // POST_FORMAT textBlockMargin phase can re-align content.
+                // Text block operands always land on their own line so
+                // structural text-block line leaves can align content.
                 boolean operandIsTextBlock = isTextBlockArgument(operand);
                 Indent contentIndent = (i == 1 && lambdaBodyInsideConditionalBranch)
                         ? Indent.absoluteSpaceIndent(owner.columnOf(left.getStartPosition()))
@@ -1887,9 +1888,9 @@ final class JavaExpressionBuilder
                 branchIndent,
                 "TernaryThen");
         // When either branch is a text block, force `? """` onto its own
-        // line so POST_FORMAT textBlockMargin can re-align content. `?` and
-        // `"""` stay on the same line; the line break is between condition
-        // and the `? ...` segment.
+        // line so structural text-block line leaves can align content. `?`
+        // and `"""` stay on the same line; the line break is between
+        // condition and the `? ...` segment.
         boolean anyTextBlock = isTextBlockArgument(thenExpr) || isTextBlockArgument(elseExpr);
         addSibling(
                 composite,
@@ -2219,6 +2220,9 @@ final class JavaExpressionBuilder
                 // through buildExpressionBlock so the inner infix operands
                 // pick up CONTINUATION instead of flat-tokenizing.
                 headBlock = buildExpressionBlock(head, start, headEnd, "ChainExprHead");
+            }
+            else if (isTextBlockHead) {
+                headBlock = owner.buildTokensRangePreservingNegativeTextBlockMargin(start, headEnd, "ChainExprHead");
             }
             else {
                 headBlock = owner.buildTokensRange(start, headEnd, "ChainExprHead");
@@ -2553,6 +2557,7 @@ final class JavaExpressionBuilder
         // split at the receiver AST end only when comments need to become
         // independent chain chunks before the first selector.
         int firstSelectorStart = chainBuilder.selectorStart(chain.getFirst(), chainStart);
+        boolean isTextBlockHead = head != null && leadingExpressionIsTextBlock(head);
         if (head != null && firstSelectorStart >= 0) {
             int headStart = head.getStartPosition();
             int headAstEnd = headStart + head.getLength();
@@ -2582,10 +2587,14 @@ final class JavaExpressionBuilder
                 // Generic multi-line head — dispatch through expression
                 // handler so ParenthesizedExpression / InfixExpression /
                 // CastExpression etc. get proper indent.
-                headContent = buildExpressionBlock(head, headStart, headEnd, "ChainHeadExpr");
+                headContent = isTextBlockHead
+                        ? owner.buildTokensRangePreservingNegativeTextBlockMargin(headStart, headEnd, "ChainHeadTokens")
+                        : buildExpressionBlock(head, headStart, headEnd, "ChainHeadExpr");
             }
             else {
-                headContent = owner.buildTokensRange(headStart, headEnd, "ChainHeadTokens");
+                headContent = isTextBlockHead
+                        ? owner.buildTokensRangePreservingNegativeTextBlockMargin(headStart, headEnd, "ChainHeadTokens")
+                        : owner.buildTokensRange(headStart, headEnd, "ChainHeadTokens");
             }
             Block headBlock = JavaBlock.builder(headStart, headEnd, "ChainHead")
                     .child(headContent)

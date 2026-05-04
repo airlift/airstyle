@@ -377,14 +377,20 @@ final class JavaStatementBuilder
         if (topExpression instanceof SwitchExpression switchExpr) {
             return buildSwitchExpressionStatement(stmt, switchExpr);
         }
+        if ((stmt instanceof ReturnStatement || stmt instanceof YieldStatement)
+                && topExpression != null
+                && containsLineBreak(topExpression.getStartPosition(), topExpression.getStartPosition() + topExpression.getLength())
+                && leadingExpressionIsTextBlock(topExpression)
+                && owner.startsLine(topExpression.getStartPosition())) {
+            return buildTextBlockGeneric(stmt, topExpression.getStartPosition(), topExpression.getStartPosition() + topExpression.getLength());
+        }
         // Text block as the entire RHS of `String sql = """..."""`, or as the
         // leading-left receiver of a chain like `String x = """...""".trim()`
         // / `String x = """...""".formatted(y).strip()`: force the text block
-        // onto a new line at CONTINUATION indent so the POST_FORMAT
-        // textBlockMargin phase can re-align content. This inline-source case
-        // must run before method-chain dispatch: a multi-selector text-block
-        // initializer is also a nontrivial chain, but Airlift style still
-        // wants the opening delimiter on the line after `=`.
+        // onto a new line at CONTINUATION indent. This inline-source case must
+        // run before method-chain dispatch: a multi-selector text-block
+        // initializer is also a nontrivial chain, but Airlift style still wants
+        // the opening delimiter on the line after `=`.
         if (topExpression != null
                 && containsLineBreak(topExpression.getStartPosition(), topExpression.getStartPosition() + topExpression.getLength())
                 && isTextBlockPrefixStatement(stmt)
