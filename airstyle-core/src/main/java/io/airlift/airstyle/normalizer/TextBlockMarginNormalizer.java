@@ -557,9 +557,7 @@ public final class TextBlockMarginNormalizer
     private static int canonicalClosingIndentWidth(SourceModel sourceModel, TextBlock node, int expectedOpeningIndentWidth)
     {
         SourceModel.TextBlockLine closingLine = sourceModel.textBlockClosingLine(node);
-        if (closingLine == null
-                || closingLine.blank()
-                || sourceModel.source().charAt(closingLine.firstNonWhitespace()) != '"') {
+        if (closingLine == null || closingLine.blank()) {
             return expectedOpeningIndentWidth;
         }
 

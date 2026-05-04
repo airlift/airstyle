@@ -47,6 +47,7 @@ public final class SourceModel
 {
     private static final ThreadLocal<CacheState> CACHE_STATE = new ThreadLocal<>();
     private static final Map<String, String> BASE_PARSER_OPTIONS = JavaLanguageSupport.compilerOptions();
+    private static final int TEXT_BLOCK_DELIMITER_LENGTH = 3;
 
     private final String source;
     private final char[] sourceChars;
@@ -708,16 +709,30 @@ public final class SourceModel
     public List<TextBlockLine> textBlockContentLines(TextBlock textBlock)
     {
         List<TextBlockLine> lines = textBlockLines(textBlock);
-        if (lines.size() <= 1) {
-            return List.of();
+        if (textBlockClosingLine(textBlock, lines) == null) {
+            return lines;
         }
         return List.copyOf(lines.subList(0, lines.size() - 1));
     }
 
+    /// Returns the physical closing line when the closing delimiter is the
+    /// first non-whitespace token on that line. Returns null when the
+    /// delimiter is attached to final content, because there is no standalone
+    /// closing line to reindent.
     public TextBlockLine textBlockClosingLine(TextBlock textBlock)
     {
         List<TextBlockLine> lines = textBlockLines(textBlock);
-        return lines.isEmpty() ? null : lines.getLast();
+        return textBlockClosingLine(textBlock, lines);
+    }
+
+    private TextBlockLine textBlockClosingLine(TextBlock textBlock, List<TextBlockLine> lines)
+    {
+        if (lines.isEmpty()) {
+            return null;
+        }
+        TextBlockLine line = lines.getLast();
+        int closingDelimiterStart = textBlock.getStartPosition() + textBlock.getLength() - TEXT_BLOCK_DELIMITER_LENGTH;
+        return line.firstNonWhitespace() == closingDelimiterStart ? line : null;
     }
 
     int textBlockMinimumContentIndent(TextBlock textBlock)
