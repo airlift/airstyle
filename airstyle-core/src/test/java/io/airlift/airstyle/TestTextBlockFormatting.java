@@ -51,9 +51,9 @@ public class TestTextBlockFormatting
 
                 class Test
                 {
-                    @Query(\"\"\"
+                    @Query(\"""
                             SELECT true
-                            \"\"\")
+                            \""")
                     boolean isEnabled()
                     {
                         return true;
@@ -71,9 +71,9 @@ public class TestTextBlockFormatting
                 class Test
                 {
                     @Query(
-                            \"\"\"
+                            \"""
                             SELECT true
-                            \"\"\")
+                            \""")
                     boolean isEnabled()
                     {
                         return true;
@@ -96,9 +96,9 @@ public class TestTextBlockFormatting
 
                 interface Test
                 {
-                    @SqlQuery(\"\"\"
+                    @SqlQuery(\"""
                             SELECT 123
-                            \"\"\")
+                            \""")
                     int getNames();
                 }
                 """;
@@ -113,9 +113,9 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                             SELECT 123
-                            \"\"\")
+                            \""")
                     int getNames();
                 }
                 """;
@@ -133,9 +133,9 @@ public class TestTextBlockFormatting
                 class Test
                 {
                     @Option(names = "--image-tag", description =
-                    \"\"\"
+                    \"""
                             Image tag to deploy, defaults to current version (999-SNAPSHOT).
-                            \"\"\")
+                            \""")
                     String imageTag;
                 }
                 """;
@@ -147,9 +147,9 @@ public class TestTextBlockFormatting
                 class Test
                 {
                     @Option(names = "--image-tag", description =
-                            \"\"\"
+                            \"""
                             Image tag to deploy, defaults to current version (999-SNAPSHOT).
-                            \"\"\")
+                            \""")
                     String imageTag;
                 }
                 """;
@@ -168,10 +168,10 @@ public class TestTextBlockFormatting
                 class Test
                 {
                     @Option(names = "--pull-through-secret-arn", description =
-                    \"\"\"
+                    \"""
                             ARN of the ASM secret to use in a ECR pull-through rule. When not set,\\
                             the Docker image will be tagged and pushed directly to the ECR repository
-                            \"\"\")
+                            \""")
                     String pullThroughSecretArn;
                 }
                 """;
@@ -183,10 +183,10 @@ public class TestTextBlockFormatting
                 class Test
                 {
                     @Option(names = "--pull-through-secret-arn", description =
-                            \"\"\"
+                            \"""
                             ARN of the ASM secret to use in a ECR pull-through rule. When not set,\\
                             the Docker image will be tagged and pushed directly to the ECR repository
-                            \"\"\")
+                            \""")
                     String pullThroughSecretArn;
                 }
                 """;
@@ -207,12 +207,12 @@ public class TestTextBlockFormatting
 
                 interface Test
                 {
-                    @SqlQuery(\"\"\"
+                    @SqlQuery(\"""
                               SELECT names
                               FROM abc
                               WHERE id = 123
                                 AND key = 'foo'
-                              \"\"\")
+                              \""")
                     int getNames();
                 }
                 """;
@@ -227,12 +227,12 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                             SELECT names
                             FROM abc
                             WHERE id = 123
                               AND key = 'foo'
-                            \"\"\")
+                            \""")
                     int getNames();
                 }
                 """;
@@ -253,12 +253,12 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                                       SELECT names
                                       FROM abc
                                       WHERE id = 123
                                         AND key = 'foo'
-                                      \"\"\")
+                                      \""")
                     int getNames();
                 }
                 """;
@@ -273,12 +273,12 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                             SELECT names
                             FROM abc
                             WHERE id = 123
                               AND key = 'foo'
-                            \"\"\")
+                            \""")
                     int getNames();
                 }
                 """;
@@ -299,10 +299,10 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                    \"\"\"
+                    \"""
                     SELECT names
                     FROM abc
-                    \"\"\")
+                    \""")
                     int getNames();
                 }
                 """;
@@ -317,10 +317,10 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                             SELECT names
                             FROM abc
-                            \"\"\")
+                            \""")
                     int getNames();
                 }
                 """;
@@ -341,10 +341,10 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                    \"\"\"
+                    \"""
                             SELECT name
                         WHERE active = true
-                    \"\"\")
+                    \""")
                     String query();
                 }
                 """;
@@ -373,10 +373,10 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                       SELECT values
                       FROM xyz
-                      \"\"\")
+                      \""")
                     int getValues();
                 }
                 """;
@@ -391,10 +391,10 @@ public class TestTextBlockFormatting
                 interface Test
                 {
                     @SqlQuery(
-                            \"\"\"
+                            \"""
                             SELECT values
                             FROM xyz
-                            \"\"\")
+                            \""")
                     int getValues();
                 }
                 """;
@@ -413,28 +413,30 @@ public class TestTextBlockFormatting
                 {
                     String value()
                     {
-                        return Optional.of(\"\"\"
+                        return Optional.of(\"""
                                 [Unit]
                                 WantedBy=multi-user.target
-                                \"\"\").orElseThrow();
+                                \""").orElseThrow();
                     }
                 }
                 """;
 
-        String newCode = lines(
-                "import java.util.Optional;",
-                "",
-                "class Test",
-                "{",
-                "    String value()",
-                "    {",
-                "        return Optional.of(",
-                "                \"\"\"",
-                "                [Unit]",
-                "                WantedBy=multi-user.target",
-                "                \"\"\").orElseThrow();",
-                "    }",
-                "}");
+        String newCode =
+                """
+                import java.util.Optional;
+
+                class Test
+                {
+                    String value()
+                    {
+                        return Optional.of(
+                                \"""
+                                [Unit]
+                                WantedBy=multi-user.target
+                                \""").orElseThrow();
+                    }
+                }
+                """;
 
         assertFormatsOldToNew(oldCode, newCode);
     }
@@ -479,19 +481,21 @@ public class TestTextBlockFormatting
     @Test
     void testFormatterKeepsTextBlockClosingDelimiterAlignedToHostInWrappedArgument()
     {
-        String code = lines(
-                "class Test",
-                "{",
-                "    void run()",
-                "    {",
-                "        check(",
-                "                \"\"\"",
-                "                SELECT *",
-                "                FROM t",
-                "                WHERE x = 1",
-                "                \"\"\");",
-                "    }",
-                "}");
+        String code =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        check(
+                                \"""
+                                SELECT *
+                                FROM t
+                                WHERE x = 1
+                                \""");
+                    }
+                }
+                """;
 
         assertCanonicalFormatting(code);
     }
@@ -506,11 +510,11 @@ public class TestTextBlockFormatting
                     void run()
                     {
                         String sql =
-                                \"\"\"
+                                \"""
                                 INSERT INTO %s
                                 SELECT *
                                 FROM src
-                                \"\"\"
+                                \"""
                                         .formatted(name());
                     }
 
@@ -533,26 +537,28 @@ public class TestTextBlockFormatting
                 {
                     String query()
                     {
-                        String sql = \"\"\"
+                        String sql = \"""
                         SELECT 1
-                        \"\"\";
+                        \""";
                         return sql;
                     }
                 }
                 """;
 
-        String newCode = lines(
-                "class Test",
-                "{",
-                "    String query()",
-                "    {",
-                "        String sql =",
-                "                \"\"\"",
-                "                SELECT 1",
-                "                \"\"\";",
-                "        return sql;",
-                "    }",
-                "}");
+        String newCode =
+                """
+                class Test
+                {
+                    String query()
+                    {
+                        String sql =
+                                \"""
+                                SELECT 1
+                                \""";
+                        return sql;
+                    }
+                }
+                """;
 
         assertFormatsOldToNew(oldCode, newCode);
     }
@@ -566,9 +572,9 @@ public class TestTextBlockFormatting
                 {
                     String policy()
                     {
-                        var policy = \"\"\"
+                        var policy = \"""
                         allow all
-                        \"\"\";
+                        \""";
                         return policy;
                     }
                 }
@@ -581,9 +587,9 @@ public class TestTextBlockFormatting
                     String policy()
                     {
                         var policy =
-                                \"\"\"
+                                \"""
                                 allow all
-                                \"\"\";
+                                \""";
                         return policy;
                     }
                 }
@@ -603,12 +609,12 @@ public class TestTextBlockFormatting
                     {
                         String responseBody;
                         if (first) {
-                            responseBody = \"\"\"
-                                           {"results": [{"id": "user-1"}]}\"\"\";
+                            responseBody = \"""
+                                           {"results": [{"id": "user-1"}]}\""";
                         }
                         else {
-                            responseBody = \"\"\"
-                                           {"results": [{"id": "user-2"}]}\"\"\";
+                            responseBody = \"""
+                                           {"results": [{"id": "user-2"}]}\""";
                         }
                     }
                 }
@@ -623,13 +629,13 @@ public class TestTextBlockFormatting
                         String responseBody;
                         if (first) {
                             responseBody =
-                                    \"\"\"
-                                    {"results": [{"id": "user-1"}]}\"\"\";
+                                    \"""
+                                    {"results": [{"id": "user-1"}]}\""";
                         }
                         else {
                             responseBody =
-                                    \"\"\"
-                                    {"results": [{"id": "user-2"}]}\"\"\";
+                                    \"""
+                                    {"results": [{"id": "user-2"}]}\""";
                         }
                     }
                 }
@@ -648,15 +654,15 @@ public class TestTextBlockFormatting
                     String assignAndReturn()
                     {
                         String responseBody;
-                        return responseBody = \"\"\"
-                                              {"results": []}\"\"\";
+                        return responseBody = \"""
+                                              {"results": []}\""";
                     }
 
                     void assignInArgument()
                     {
                         String responseBody;
-                        consume(responseBody = \"\"\"
-                                               {"results": []}\"\"\");
+                        consume(responseBody = \"""
+                                               {"results": []}\""");
                     }
 
                     void consume(String value) {}
@@ -671,16 +677,16 @@ public class TestTextBlockFormatting
                     {
                         String responseBody;
                         return responseBody =
-                                \"\"\"
-                                {"results": []}\"\"\";
+                                \"""
+                                {"results": []}\""";
                     }
 
                     void assignInArgument()
                     {
                         String responseBody;
                         consume(responseBody =
-                                \"\"\"
-                                {"results": []}\"\"\");
+                                \"""
+                                {"results": []}\""");
                     }
 
                     void consume(String value) {}
@@ -699,9 +705,9 @@ public class TestTextBlockFormatting
                 {
                     String query()
                     {
-                        return \"\"\"
+                        return \"""
                                SELECT 1
-                               \"\"\";
+                               \""";
                     }
                 }
                 """;
@@ -755,10 +761,10 @@ public class TestTextBlockFormatting
                 {
                     String query()
                     {
-                        return \"\"\"
+                        return \"""
                                Resources with required tags:
                                - tag_a
-                               \"\"\";
+                               \""";
                     }
                 }
                 """;
@@ -775,11 +781,11 @@ public class TestTextBlockFormatting
                 {
                     String query(String tags)
                     {
-                        return \"\"\"
+                        return \"""
                                Resources with required tags:
 
                                %s
-                               \"\"\".formatted(tags);
+                               \""".formatted(tags);
                     }
                 }
                 """;
@@ -796,9 +802,9 @@ public class TestTextBlockFormatting
                 {
                     void fail()
                     {
-                        throw new IllegalStateException(\"\"\"
+                        throw new IllegalStateException(\"""
                                 boom
-                                \"\"\");
+                                \""");
                     }
                 }
                 """;
@@ -810,9 +816,9 @@ public class TestTextBlockFormatting
                     void fail()
                     {
                         throw new IllegalStateException(
-                                \"\"\"
+                                \"""
                                 boom
-                                \"\"\");
+                                \""");
                     }
                 }
                 """;
@@ -831,9 +837,9 @@ public class TestTextBlockFormatting
                     {
                         return switch (input) {
                             default -> {
-                                yield \"\"\"
+                                yield \"""
                                       value
-                                      \"\"\";
+                                      \""";
                             }
                         };
                     }
@@ -852,11 +858,11 @@ public class TestTextBlockFormatting
                 {
                     String value(boolean cond)
                     {
-                        var formattedPolicyText = cond ? \"\"\"
+                        var formattedPolicyText = cond ? \"""
                                        xxx
-                                       \"\"\" : \"\"\"
+                                       \""" : \"""
                                                yyy
-                                               \"\"\";
+                                               \""";
                         return formattedPolicyText;
                     }
                 }
@@ -869,12 +875,12 @@ public class TestTextBlockFormatting
                     String value(boolean cond)
                     {
                         var formattedPolicyText = cond
-                                ? \"\"\"
+                                ? \"""
                                   xxx
-                                  \"\"\"
-                                : \"\"\"
+                                  \"""
+                                : \"""
                                   yyy
-                                  \"\"\";
+                                  \""";
                         return formattedPolicyText;
                     }
                 }
@@ -892,9 +898,9 @@ public class TestTextBlockFormatting
                 {
                     String value()
                     {
-                        var formattedPolicyText = (\"\"\"
+                        var formattedPolicyText = (\"""
                                 abc
-                                \"\"\");
+                                \""");
                         return formattedPolicyText;
                     }
                 }
@@ -907,9 +913,9 @@ public class TestTextBlockFormatting
                     String value()
                     {
                         var formattedPolicyText = (
-                                \"\"\"
+                                \"""
                                 abc
-                                \"\"\");
+                                \""");
                         return formattedPolicyText;
                     }
                 }
@@ -927,9 +933,9 @@ public class TestTextBlockFormatting
                 {
                     Runnable action()
                     {
-                        return () -> \"\"\"
+                        return () -> \"""
                                 lambda
-                                \"\"\";
+                                \""";
                     }
                 }
                 """;
@@ -941,9 +947,9 @@ public class TestTextBlockFormatting
                     Runnable action()
                     {
                         return () ->
-                                \"\"\"
+                                \"""
                                 lambda
-                                \"\"\";
+                                \""";
                     }
                 }
                 """;
@@ -961,12 +967,12 @@ public class TestTextBlockFormatting
                     String value(int input)
                     {
                         return switch (input) {
-                            case 1 -> \"\"\"
+                            case 1 -> \"""
                                       one
-                                      \"\"\";
-                            default -> \"\"\"
+                                      \""";
+                            default -> \"""
                                        other
-                                       \"\"\";
+                                       \""";
                         };
                     }
                 }
@@ -984,9 +990,9 @@ public class TestTextBlockFormatting
                 {
                     String value()
                     {
-                        var formattedPolicyText = \"prefix \" + \"\"\"
+                        var formattedPolicyText = \"prefix \" + \"""
                                 value
-                                \"\"\";
+                                \""";
                         return formattedPolicyText;
                     }
                 }
@@ -999,9 +1005,9 @@ public class TestTextBlockFormatting
                     String value()
                     {
                         var formattedPolicyText = \"prefix \" +
-                                \"\"\"
+                                \"""
                                 value
-                                \"\"\";
+                                \""";
                         return formattedPolicyText;
                     }
                 }
@@ -1019,9 +1025,9 @@ public class TestTextBlockFormatting
                 {
                     String value()
                     {
-                        var formattedPolicyText = (String) \"\"\"
+                        var formattedPolicyText = (String) \"""
                                 value
-                                \"\"\";
+                                \""";
                         return formattedPolicyText;
                     }
                 }
@@ -1034,9 +1040,9 @@ public class TestTextBlockFormatting
                     String value()
                     {
                         var formattedPolicyText = (String)
-                                \"\"\"
+                                \"""
                                 value
-                                \"\"\";
+                                \""";
                         return formattedPolicyText;
                     }
                 }
@@ -1055,30 +1061,32 @@ public class TestTextBlockFormatting
                     String run()
                     {
                         String expected =
-                                    \"\"\"
+                                    \"""
                                     # TYPE metric_name counter
                                     # HELP metric_name metric_help
                                     metric_name 0
-                                    \"\"\";
+                                    \""";
                         return expected;
                     }
                 }
                 """;
 
-        String newCode = lines(
-                "class Test",
-                "{",
-                "    String run()",
-                "    {",
-                "        String expected =",
-                "                \"\"\"",
-                "                # TYPE metric_name counter",
-                "                # HELP metric_name metric_help",
-                "                metric_name 0",
-                "                \"\"\";",
-                "        return expected;",
-                "    }",
-                "}");
+        String newCode =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        String expected =
+                                \"""
+                                # TYPE metric_name counter
+                                # HELP metric_name metric_help
+                                metric_name 0
+                                \""";
+                        return expected;
+                    }
+                }
+                """;
 
         assertFormatsOldToNew(oldCode, newCode);
         assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
@@ -1094,11 +1102,11 @@ public class TestTextBlockFormatting
                     String run()
                     {
                         String expected =
-                                \"\"\"
+                                \"""
                                         VALUES
                                           ('a', 1),
                                           ('b', 2)
-                                        \"\"\";
+                                        \""";
                         return expected;
                     }
                 }
@@ -1110,16 +1118,18 @@ public class TestTextBlockFormatting
     @Test
     void testFormatterKeepsLeadingWhitespaceOnFinalTextBlockContentLine()
     {
-        String code = lines(
-                "class Test",
-                "{",
-                "    String run()",
-                "    {",
-                "        return \"\"\"",
-                "               first",
-                "                   second\"\"\";",
-                "    }",
-                "}");
+        String code =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return \"""
+                               first
+                                   second\""";
+                    }
+                }
+                """;
 
         assertCanonicalFormatting(code);
         assertEquals(firstTextBlockLiteralValue(code), firstTextBlockLiteralValue(formatter.format(code)));
@@ -1135,30 +1145,32 @@ public class TestTextBlockFormatting
                     String run()
                     {
                         String json =
-                                    \"\"\"
+                                    \"""
                                     {
                                       "foo" : "my value"
                                     }\\
-                                    \"\"\";
+                                    \""";
                         return json;
                     }
                 }
                 """;
 
-        String newCode = lines(
-                "class Test",
-                "{",
-                "    String run()",
-                "    {",
-                "        String json =",
-                "                \"\"\"",
-                "                {",
-                "                  \"foo\" : \"my value\"",
-                "                }\\",
-                "                \"\"\";",
-                "        return json;",
-                "    }",
-                "}");
+        String newCode =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        String json =
+                                \"""
+                                {
+                                  "foo" : "my value"
+                                }\\
+                                \""";
+                        return json;
+                    }
+                }
+                """;
 
         assertFormatsOldToNew(oldCode, newCode);
         assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
@@ -1167,37 +1179,41 @@ public class TestTextBlockFormatting
     @Test
     void testFormatterFixesConcatenatedTextBlockHostIndentationInMethodArgument()
     {
-        String oldCode = lines(
-                "class Test",
-                "{",
-                "    void run(String tableName)",
-                "    {",
-                "        assertQuery(",
-                "                \"SELECT * FROM \" + tableName,",
-                "                \"\" +",
-                "                \"\"\"",
-                "                    VALUES",
-                "                        ('url1', 1),",
-                "                        ('url2', 2)",
-                "                \"\"\");",
-                "    }",
-                "}");
+        String oldCode =
+                """
+                class Test
+                {
+                    void run(String tableName)
+                    {
+                        assertQuery(
+                                "SELECT * FROM " + tableName,
+                                "" +
+                                \"""
+                                    VALUES
+                                        ('url1', 1),
+                                        ('url2', 2)
+                                \""");
+                    }
+                }
+                """;
 
-        String newCode = lines(
-                "class Test",
-                "{",
-                "    void run(String tableName)",
-                "    {",
-                "        assertQuery(",
-                "                \"SELECT * FROM \" + tableName,",
-                "                \"\" +",
-                "                        \"\"\"",
-                "                            VALUES",
-                "                                ('url1', 1),",
-                "                                ('url2', 2)",
-                "                        \"\"\");",
-                "    }",
-                "}");
+        String newCode =
+                """
+                class Test
+                {
+                    void run(String tableName)
+                    {
+                        assertQuery(
+                                "SELECT * FROM " + tableName,
+                                "" +
+                                        \"""
+                                            VALUES
+                                                ('url1', 1),
+                                                ('url2', 2)
+                                        \""");
+                    }
+                }
+                """;
 
         assertFormatsOldToNew(oldCode, newCode);
         assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
@@ -1212,9 +1228,9 @@ public class TestTextBlockFormatting
                 {
                     void verify(boolean ok)
                     {
-                        assert ok : \"\"\"
+                        assert ok : \"""
                                 bad
-                                \"\"\";
+                                \""";
                     }
                 }
                 """;
@@ -1226,9 +1242,9 @@ public class TestTextBlockFormatting
                     void verify(boolean ok)
                     {
                         assert ok :
-                                \"\"\"
+                                \"""
                                 bad
-                                \"\"\";
+                                \""";
                     }
                 }
                 """;
@@ -1245,9 +1261,9 @@ public class TestTextBlockFormatting
                 {
                     String[] values()
                     {
-                        return new String[] { \"\"\"
+                        return new String[] { \"""
                                 value
-                                \"\"\" };
+                                \""" };
                     }
                 }
                 """;
@@ -1259,9 +1275,9 @@ public class TestTextBlockFormatting
                     String[] values()
                     {
                         return new String[] {
-                                \"\"\"
+                                \"""
                                 value
-                                \"\"\",
+                                \""",
                         };
                     }
                 }
@@ -1277,20 +1293,22 @@ public class TestTextBlockFormatting
                 """
                 class Test
                 {
-                    String policy = \"\"\"
+                    String policy = \"""
                             field
-                    \"\"\";
+                    \""";
                 }
                 """;
 
-        String newCode = lines(
-                "class Test",
-                "{",
-                "    String policy =",
-                "            \"\"\"",
-                "            field",
-                "            \"\"\";",
-                "}");
+        String newCode =
+                """
+                class Test
+                {
+                    String policy =
+                            \"""
+                            field
+                            \""";
+                }
+                """;
 
         assertFormatsOldToNew(oldCode, newCode);
     }
@@ -1304,11 +1322,11 @@ public class TestTextBlockFormatting
                 {
                     String run()
                     {
-                        return \"\"\"
+                        return \"""
                                 %s
                                 | where value == 1
                                 | sort by createdAt desc;
-                                \"\"\".formatted(table);
+                                \""".formatted(table);
                     }
                 }
                 """;
@@ -1319,11 +1337,11 @@ public class TestTextBlockFormatting
                 {
                     String run()
                     {
-                        return \"\"\"
+                        return \"""
                                %s
                                | where value == 1
                                | sort by createdAt desc;
-                               \"\"\".formatted(table);
+                               \""".formatted(table);
                     }
                 }
                 """;
@@ -1341,11 +1359,11 @@ public class TestTextBlockFormatting
                 {
                     String run()
                     {
-                        return \"\"\"
+                        return \"""
                                 let recent = %s
                                     | summarize max(createdAt);
                                 recent
-                                \"\"\".formatted(table);
+                                \""".formatted(table);
                     }
                 }
                 """;
@@ -1356,11 +1374,11 @@ public class TestTextBlockFormatting
                 {
                     String run()
                     {
-                        return \"\"\"
+                        return \"""
                                let recent = %s
                                    | summarize max(createdAt);
                                recent
-                               \"\"\".formatted(table);
+                               \""".formatted(table);
                     }
                 }
                 """;
@@ -1787,11 +1805,6 @@ public class TestTextBlockFormatting
                 """;
 
         assertFormatsOldToNew(oldCode, newCode);
-    }
-
-    private static String lines(String... lines)
-    {
-        return String.join("\n", lines) + "\n";
     }
 
     private static String firstTextBlockLiteralValue(String source)
