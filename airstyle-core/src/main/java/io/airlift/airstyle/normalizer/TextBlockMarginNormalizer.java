@@ -21,7 +21,6 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MemberValuePair;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -178,7 +177,7 @@ public final class TextBlockMarginNormalizer
         }
         boolean preserveOriginalLiteralMargin = !isSelectorAttached(node)
                 && (!hostExpression.equals(node)
-                || node.getParent() instanceof InfixExpression);
+                || originalMinimumIndentStartsAtOpening(originalSourceModel, originalNode));
         if (preserveOriginalLiteralMargin
                 && originalStartsAtLineIndent(originalSourceModel, originalNode)) {
             if (addTranslatedOriginalMarginReplacements(sourceModel, node, originalSourceModel, originalNode, expectedIndentWidth, replacements)) {
@@ -418,10 +417,8 @@ public final class TextBlockMarginNormalizer
         if (originalMinimumIndentWidth < 0) {
             return null;
         }
-        int originalStart = originalNode.getStartPosition();
-        int originalLineStart = originalSourceModel.lineStart(originalStart);
-        int originalOpeningIndentWidth = originalSourceModel.indentWidth(originalLineStart, originalStart);
-        int targetMinimumIndentWidth = max(expectedOpeningIndentWidth, originalMinimumIndentWidth + expectedOpeningIndentWidth - originalOpeningIndentWidth);
+        int originalOpeningIndentLength = openingIndentLength(originalSourceModel, originalNode);
+        int targetMinimumIndentWidth = max(expectedOpeningIndentWidth, originalMinimumIndentWidth + expectedOpeningIndentWidth - originalOpeningIndentLength);
 
         SourceModel.TextBlockLine closingLine = sourceModel.textBlockClosingLine(node);
         List<TextBlockLineIndent> contentLineIndents = new ArrayList<>();
@@ -634,6 +631,21 @@ public final class TextBlockMarginNormalizer
     {
         return originalNode != null
                 && originalSourceModel.startsAtLineIndent(originalNode.getStartPosition());
+    }
+
+    private static boolean originalMinimumIndentStartsAtOpening(SourceModel originalSourceModel, TextBlock originalNode)
+    {
+        if (!originalStartsAtLineIndent(originalSourceModel, originalNode)) {
+            return false;
+        }
+
+        return textBlockJlsMinimumIndent(originalSourceModel, originalNode, originalSourceModel.textBlockLines(originalNode)) == openingIndentLength(originalSourceModel, originalNode);
+    }
+
+    private static int openingIndentLength(SourceModel sourceModel, TextBlock node)
+    {
+        int start = node.getStartPosition();
+        return start - sourceModel.lineStart(start);
     }
 
     private static ParenthesizedListLayoutModel.ParenthesizedListContext wrappedArgumentContext(SourceModel sourceModel, ASTNode node)

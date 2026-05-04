@@ -501,6 +501,106 @@ public class TestTextBlockFormatting
     }
 
     @Test
+    void testFormatterKeepsWrappedMethodArgumentTextBlockWithIndentedContent()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        check(
+                                \"""
+                                    abc
+                                    xyz
+                                \""");
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterFixesWrappedMethodArgumentTextBlockWithTabIndentedSource()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                \tvoid run()
+                \t{
+                \t\tcheck(
+                \t\t\t\t\"""
+                \t\t\t\t\tabc
+                \t\t\t\t\txyz
+                \t\t\t\t\""");
+                \t}
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        check(
+                                \"""
+                                \tabc
+                                \txyz
+                                \""");
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
+    }
+
+    @Test
+    void testFormatterKeepsVariableInitializerTextBlockWithIndentedContent()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        String text =
+                                \"""
+                                    abc
+                                    xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsReturnTextBlockWithIndentedContentOnWrappedLine()
+    {
+        String code =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return
+                                \"""
+                                    abc
+                                    xyz
+                                \""";
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterKeepsTextBlockHostIndentInLocalFormattedInitializer()
     {
         String code =
