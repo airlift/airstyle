@@ -243,6 +243,34 @@ public class TestFormatterSourceModel
     }
 
     @Test
+    void testTextBlockClosingLineIgnoresDelimiterAttachedToFinalContent()
+    {
+        String source =
+                """
+                class Test
+                {
+                    Object run(Object value)
+                    {
+                        return \"""
+                               first
+                                   second\""".formatted(value);
+                    }
+                }
+                """;
+
+        SourceModel model = SourceModel.create(source);
+        TextBlock textBlock = firstNode(model.compilationUnit(), TextBlock.class);
+        assertNotNull(textBlock);
+
+        List<SourceModel.TextBlockLine> contentLines = model.textBlockContentLines(textBlock);
+
+        assertEquals(2, contentLines.size());
+        assertEquals("               first", source.substring(contentLines.get(0).lineStart(), contentLines.get(0).lineEnd()));
+        assertEquals("                   second\"\"\".formatted(value);", source.substring(contentLines.get(1).lineStart(), contentLines.get(1).lineEnd()));
+        assertNull(model.textBlockClosingLine(textBlock));
+    }
+
+    @Test
     void testLineQueriesAndQualificationHelpers()
     {
         String source =
