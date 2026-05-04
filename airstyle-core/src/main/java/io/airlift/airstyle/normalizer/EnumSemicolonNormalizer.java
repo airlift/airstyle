@@ -81,6 +81,10 @@ public final class EnumSemicolonNormalizer
                     replacements.add(new Replacement(semicolon, semicolon + 1, needsTrailingComma ? "," : ""));
                     return true;
                 }
+                if (hasUnwantedTrailingComma(sourceModel, layout)) {
+                    removeTrailingCommaReplacement(sourceModel, layout, replacements);
+                    return true;
+                }
                 if (needsTrailingComma) {
                     addTrailingCommaReplacement(source, layout, replacements);
                 }
@@ -88,6 +92,17 @@ public final class EnumSemicolonNormalizer
             }
         });
         return Replacement.applyAll(source, replacements);
+    }
+
+    private static void removeTrailingCommaReplacement(
+            SourceModel sourceModel,
+            LiteralLayoutModel.EnumLayout layout,
+            List<Replacement> replacements)
+    {
+        int trailingComma = sourceModel.findCommaBetween(layout.lastConstantEnd(), layout.closeBrace());
+        if (trailingComma >= 0) {
+            replacements.add(new Replacement(trailingComma, trailingComma + 1, ""));
+        }
     }
 
     private static void addTrailingCommaReplacement(String source, LiteralLayoutModel.EnumLayout layout, List<Replacement> replacements)
@@ -104,14 +119,31 @@ public final class EnumSemicolonNormalizer
         replacements.add(new Replacement(insertPosition, insertPosition, ","));
     }
 
+    private static boolean hasUnwantedTrailingComma(SourceModel sourceModel, LiteralLayoutModel.EnumLayout layout)
+    {
+        return layout.hasConstants()
+                && layout.constants().size() == 1
+                && layout.hasTrailingComma()
+                && sourceModel.containsOnlyTokensWhitespaceAndComments(layout.lastConstantEnd(), layout.closeBrace(), ITerminalSymbols.TokenNameCOMMA);
+    }
+
     private static boolean needsTrailingComma(LiteralLayoutModel.EnumLayout layout)
     {
-        if (!layout.hasConstants() || !layout.simpleEnum() || !layout.multiline()) {
+        if (!layout.hasConstants()
+                || layout.constants().size() == 1
+                || hasNonSeparatorOwnedConstantShape(layout)
+                || !layout.multiline()) {
             return false;
         }
         if (layout.constants().size() > 1 && layout.allConstantsOnSameLine()) {
             return false;
         }
         return !layout.hasTrailingComma();
+    }
+
+    private static boolean hasNonSeparatorOwnedConstantShape(LiteralLayoutModel.EnumLayout layout)
+    {
+        return layout.constants().stream()
+                .anyMatch(constant -> constant.getAnonymousClassDeclaration() != null || !constant.modifiers().isEmpty());
     }
 }
