@@ -195,6 +195,214 @@ public class TestSwitchFormatting
     }
 
     @Test
+    void testFormatterKeepsTrailingCommentOnWrappedSwitchCaseLabel()
+    {
+        String code =
+                """
+                class Test
+                {
+                    boolean run(Behavior behavior)
+                    {
+                        return switch (behavior) {
+                            case SUPPORTS_ADD_COLUMN,
+                                 SUPPORTS_ARRAY,
+                                 SUPPORTS_NEGATIVE_DATE, // min date is 0001-01-01
+                                 SUPPORTS_RENAME_COLUMN,
+                                 SUPPORTS_RENAME_TABLE -> false;
+                            default -> true;
+                        };
+                    }
+
+                    enum Behavior
+                    {
+                        SUPPORTS_ADD_COLUMN,
+                        SUPPORTS_ARRAY,
+                        SUPPORTS_NEGATIVE_DATE,
+                        SUPPORTS_RENAME_COLUMN,
+                        SUPPORTS_RENAME_TABLE,
+                        OTHER,
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterFixesCommentDirectlyAfterSwitchRuleArrow()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    boolean run(Behavior behavior)
+                    {
+                        return switch (behavior) {
+                            case SUPPORTS_NEGATIVE_DATE ->
+                                    // min date is 0001-01-01
+                                    false;
+                            default -> true;
+                        };
+                    }
+
+                    enum Behavior
+                    {
+                        SUPPORTS_NEGATIVE_DATE,
+                        OTHER,
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    boolean run(Behavior behavior)
+                    {
+                        return switch (behavior) {
+                            // min date is 0001-01-01
+                            case SUPPORTS_NEGATIVE_DATE -> false;
+                            default -> true;
+                        };
+                    }
+
+                    enum Behavior
+                    {
+                        SUPPORTS_NEGATIVE_DATE,
+                        OTHER,
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterFixesCommentDirectlyBeforeSwitchRuleArrow()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    boolean run(Behavior behavior)
+                    {
+                        return switch (behavior) {
+                            case SUPPORTS_ADD_COLUMN,
+                                 SUPPORTS_ARRAY,
+                                 SUPPORTS_NEGATIVE_DATE
+                                    // min date is 0001-01-01
+                                         -> false;
+                            default -> true;
+                        };
+                    }
+
+                    enum Behavior
+                    {
+                        SUPPORTS_ADD_COLUMN,
+                        SUPPORTS_ARRAY,
+                        SUPPORTS_NEGATIVE_DATE,
+                        OTHER,
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    boolean run(Behavior behavior)
+                    {
+                        return switch (behavior) {
+                            // min date is 0001-01-01
+                            case SUPPORTS_ADD_COLUMN,
+                                 SUPPORTS_ARRAY,
+                                 SUPPORTS_NEGATIVE_DATE -> false;
+                            default -> true;
+                        };
+                    }
+
+                    enum Behavior
+                    {
+                        SUPPORTS_ADD_COLUMN,
+                        SUPPORTS_ARRAY,
+                        SUPPORTS_NEGATIVE_DATE,
+                        OTHER,
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterFixesStandaloneCommentsInWrappedSwitchCaseLabelList()
+    {
+        String oldCode =
+                """
+                public class Test
+                {
+                    enum Value
+                    {
+                        ABC, XYZ, HELLO
+                    }
+
+                    void test(Value value)
+                    {
+                        switch (value) {
+                            case ABC,
+                                 // xyz
+                                 XYZ,
+                                 // hello
+                                 HELLO -> System.out.println(42);
+                        }
+
+                        switch (value) {
+                            case // abc
+                                    ABC,
+                                    // xyz
+                                    XYZ,
+                                    // hello
+                                    HELLO -> System.out.println(42);
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                public class Test
+                {
+                    enum Value
+                    {
+                        ABC, XYZ, HELLO
+                    }
+
+                    void test(Value value)
+                    {
+                        switch (value) {
+                            case ABC,
+                                 // xyz
+                                 XYZ,
+                                 // hello
+                                 HELLO -> System.out.println(42);
+                        }
+
+                        switch (value) {
+                            case    // abc
+                                    ABC,
+                                    // xyz
+                                    XYZ,
+                                    // hello
+                                    HELLO -> System.out.println(42);
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterFixesSwitchStatementRuleSingleLineExpressionPlacement()
     {
         String oldCode =

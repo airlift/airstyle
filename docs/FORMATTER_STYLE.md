@@ -217,6 +217,7 @@ return Optional.of(
 - Reformat non-empty one-line blocks into normal multiline blocks.
 - In `do` statements, put the trailing `while (...);` on the line after the body block.
 - In switch `case` guards, preserve whether `when` starts on the case line or the next line; wrapped guard operands use one continuation indent from the case label.
+- In wrapped switch `case` label lists, preserve trailing comments on individual labels and keep standalone comments aligned with the labels. Standalone comments directly before or after `->` move before the `case` rule header.
 - In try-with-resources, omit the optional semicolon after the final resource.
 - Unused lambda parameters are written as `_`.
 
