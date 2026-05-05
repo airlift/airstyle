@@ -14,6 +14,7 @@
 package io.airlift.airstyle.normalizer;
 
 import io.airlift.airstyle.model.SourceModel;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
@@ -119,6 +120,8 @@ public final class SwitchRuleNormalizer
                 continue;
             }
 
+            addBeforeArrowCommentReplacements(sourceModel, switchCase, arrowPosition, replacements);
+
             if (!sourceModel.containsLineBreak(arrowEnd, bodyStart)) {
                 continue;
             }
@@ -134,6 +137,44 @@ public final class SwitchRuleNormalizer
             replacements.add(commentMoveReplacement(sourceModel, switchCase, comments));
             replacements.add(new Replacement(arrowEnd, bodyStart, " "));
         }
+    }
+
+    private static void addBeforeArrowCommentReplacements(
+            SourceModel sourceModel,
+            SwitchCase switchCase,
+            int arrowPosition,
+            List<Replacement> replacements)
+    {
+        int labelContentEnd = labelContentEnd(switchCase);
+        if (labelContentEnd < 0 || labelContentEnd >= arrowPosition) {
+            return;
+        }
+        if (!sourceModel.containsLineBreak(labelContentEnd, arrowPosition)) {
+            return;
+        }
+
+        List<SourceModel.CommentRange> comments = sourceModel.rewriteSafety(labelContentEnd, arrowPosition).containedComments();
+        if (comments.isEmpty()) {
+            return;
+        }
+        if (!sourceModel.containsOnlyTokensWhitespaceAndComments(labelContentEnd, arrowPosition)) {
+            return;
+        }
+        if (!allStandaloneLineComments(sourceModel, comments)) {
+            return;
+        }
+
+        replacements.add(commentMoveReplacement(sourceModel, switchCase, comments));
+        replacements.add(new Replacement(labelContentEnd, arrowPosition, " "));
+    }
+
+    private static int labelContentEnd(SwitchCase switchCase)
+    {
+        if (switchCase.expressions().isEmpty()) {
+            return -1;
+        }
+        ASTNode last = (ASTNode) switchCase.expressions().getLast();
+        return last.getStartPosition() + last.getLength();
     }
 
     private static Statement switchRuleBody(Object candidate)

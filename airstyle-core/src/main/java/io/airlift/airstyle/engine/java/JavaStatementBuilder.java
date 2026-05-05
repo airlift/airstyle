@@ -1343,7 +1343,8 @@ final class JavaStatementBuilder
         int firstPatternStart = first.getStartPosition();
         // Emit `case ` as prefix (without per-pattern alignment — its column
         // comes from the enclosing switch body).
-        Block prefix = owner.buildTokensRange(labelStart, firstPatternStart, "CasePrefix");
+        int prefixWidth = max(0, owner.columnOf(firstPatternStart) - owner.columnOf(labelStart));
+        Block prefix = buildCasePrefix(labelStart, firstPatternStart, prefixWidth);
         composite.child(prefix);
         Block prev = prefix;
 
@@ -1352,7 +1353,6 @@ final class JavaStatementBuilder
         // the child lands at composite_column + prefix_width rather than at
         // an absolute column. This tracks changes to the composite column
         // if an outer fix shifts the case label (no absolute pins).
-        int prefixWidth = firstPatternStart - labelStart;
         int prevEnd = firstPatternStart;
         for (int i = 0; i < patterns.size(); i++) {
             ASTNode pat = (ASTNode) patterns.get(i);
@@ -1376,6 +1376,7 @@ final class JavaStatementBuilder
             // Emit any comments between this pattern and the previous one so
             // they ride at the alignment column rather than falling in a gap.
             if (i > 0) {
+                boolean firstComment = true;
                 for (JavaTokens.Token tok : tokensIn(prevEnd, pStart)) {
                     if (!tok.isComment()) {
                         continue;
@@ -1385,14 +1386,26 @@ final class JavaStatementBuilder
                             .indent(Indent.relativeSpaceIndent(prefixWidth))
                             .child(JavaBlockBuilder.commentLeaf(tok))
                             .build();
-                    addSibling(composite, prev, commentBlock, Spacing.createSpacing(0, 0, 1, true, 0));
+                    Spacing commentSpacing = firstComment && !containsLineBreak(prevEnd, tok.start())
+                            ? Spacing.oneSpace()
+                            : Spacing.createSpacing(0, 0, 1, true, 0);
+                    addSibling(composite, prev, commentBlock, commentSpacing);
                     prev = commentBlock;
+                    firstComment = false;
                 }
             }
             Block patContent = owner.buildTokensRange(pStart, pEnd, "CasePattern" + i);
             Block patBlock;
             if (i == 0) {
-                patBlock = patContent;
+                if (containsLineBreak(labelStart, pStart)) {
+                    patBlock = JavaBlock.builder(pStart, pEnd, "CasePatternAlign" + i)
+                            .indent(Indent.relativeSpaceIndent(prefixWidth))
+                            .child(patContent)
+                            .build();
+                }
+                else {
+                    patBlock = patContent;
+                }
             }
             else {
                 patBlock = JavaBlock.builder(pStart, pEnd, "CasePatternAlign" + i)
@@ -1410,6 +1423,36 @@ final class JavaStatementBuilder
             prevEnd = pEnd;
         }
         return composite.build();
+    }
+
+    private Block buildCasePrefix(int labelStart, int firstPatternStart, int prefixWidth)
+    {
+        for (JavaTokens.Token tok : tokensIn(labelStart, firstPatternStart)) {
+            if (!tok.isComment()) {
+                continue;
+            }
+            if (tok.type() != ITerminalSymbols.TokenNameCOMMENT_LINE || containsLineBreak(labelStart, tok.start())) {
+                break;
+            }
+
+            int caseEnd = labelStart + "case".length();
+            if (caseEnd > tok.start()) {
+                break;
+            }
+
+            JavaBlock.Builder prefix = JavaBlock.builder(labelStart, firstPatternStart, "CasePrefix");
+            Block keyword = owner.buildTokensRange(labelStart, caseEnd, "CasePrefixKeyword");
+            prefix.child(keyword);
+
+            int commentEnd = tok.text().endsWith("\n") ? tok.end() - 1 : tok.end();
+            Block commentBlock = JavaBlock.builder(tok.start(), commentEnd, "CasePrefixComment")
+                    .child(JavaBlockBuilder.commentLeaf(tok))
+                    .build();
+            int spacesBeforeComment = max(1, owner.columnOf(firstPatternStart) - owner.columnOf(caseEnd));
+            addSibling(prefix, keyword, commentBlock, Spacing.createSpacing(spacesBeforeComment, spacesBeforeComment, 0, false, 0));
+            return prefix.build();
+        }
+        return owner.buildTokensRange(labelStart, firstPatternStart, "CasePrefix");
     }
 
     /// Build a case label with a multi-line parenthesized pattern (e.g.
