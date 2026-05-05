@@ -140,7 +140,7 @@ final class JavaTokenRunBuilder
 
     private Block leafFor(JavaTokens.Token token, Indent indent, TextBlockMarginPolicy textBlockMarginPolicy)
     {
-        if (token.text().startsWith("\"\"\"") && token.text().contains("\n")) {
+        if (token.type() == ITerminalSymbols.TokenNameTextBlock) {
             return textBlock(token, indent, textBlockMarginPolicy);
         }
         boolean trailingNewlineComment = token.isComment()
@@ -156,7 +156,8 @@ final class JavaTokenRunBuilder
     {
         int openingColumn = columnOf(token.start());
         boolean startsAtLineIndent = startsAtLineIndent(token.start());
-        List<LineRange> ranges = textBlockLineRanges(token.text(), openingColumn, startsAtLineIndent, textBlockMarginPolicy);
+        boolean preserveHostClosing = textBlockMarginPolicy.preserveHostClosingForInlineSelector() && hasInlineSelectorAfter(token);
+        List<LineRange> ranges = textBlockLineRanges(token.text(), openingColumn, startsAtLineIndent, textBlockMarginPolicy, preserveHostClosing);
         if (ranges.isEmpty()) {
             return leaf(token.start(), token.end(), token.text(), indent);
         }
@@ -181,7 +182,12 @@ final class JavaTokenRunBuilder
         return textBlock.build();
     }
 
-    private static List<LineRange> textBlockLineRanges(String text, int openingColumn, boolean startsAtLineIndent, TextBlockMarginPolicy textBlockMarginPolicy)
+    private List<LineRange> textBlockLineRanges(
+            String text,
+            int openingColumn,
+            boolean startsAtLineIndent,
+            TextBlockMarginPolicy textBlockMarginPolicy,
+            boolean preserveHostClosing)
     {
         int firstNewline = text.indexOf('\n', 3);
         if (firstNewline < 0) {
@@ -198,7 +204,7 @@ final class JavaTokenRunBuilder
         }
         int rawBaseIndentOffset = jlsIndent - openingColumn;
         int baseIndentOffset = startsAtLineIndent ? textBlockMarginPolicy.baseIndentOffset(rawBaseIndentOffset) : 0;
-        int closingIndentOffset = canonicalClosingIndentOffset(text, contentIndent, baseIndentOffset);
+        int closingIndentOffset = preserveHostClosing ? baseIndentOffset : canonicalClosingIndentOffset(text, contentIndent, baseIndentOffset);
 
         List<LineRange> ranges = new ArrayList<>();
         ranges.add(new LineRange(0, firstNewline, 0));
@@ -231,6 +237,20 @@ final class JavaTokenRunBuilder
             lineStart = lineEnd + 1;
         }
         return List.copyOf(ranges);
+    }
+
+    private boolean hasInlineSelectorAfter(JavaTokens.Token textBlock)
+    {
+        for (JavaTokens.Token token : sourceContext.tokens()) {
+            if (token.start() < textBlock.end()) {
+                continue;
+            }
+            if (sourceContext.containsLineBreak(textBlock.end(), token.start())) {
+                return false;
+            }
+            return token.type() == ITerminalSymbols.TokenNameDOT;
+        }
+        return false;
     }
 
     private static int textBlockIndent(String text)
@@ -397,6 +417,11 @@ final class JavaTokenRunBuilder
                 case PRESERVE_NEGATIVE -> Math.min(0, rawBaseIndentOffset);
                 case PRESERVE_FULL -> rawBaseIndentOffset;
             };
+        }
+
+        private boolean preserveHostClosingForInlineSelector()
+        {
+            return this == PRESERVE_POSITIVE || this == PRESERVE_NEGATIVE;
         }
     }
 

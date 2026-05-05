@@ -629,6 +629,28 @@ public class TestTextBlockFormatting
     }
 
     @Test
+    void testFormatterKeepsTextBlockClosingDelimiterBeforeInlineSelectorAtHostIndent()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void run(String name)
+                    {
+                        String sql =
+                                \"""
+                                SELECT col\\
+                                 FROM test_table\\
+                                 LIMIT 1\\
+                                \""".formatted(name);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testAssignmentTextBlockStartsOnNewLine()
     {
         String oldCode =
