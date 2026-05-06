@@ -761,6 +761,88 @@ public class TestChainExpressionFormatting
     }
 
     @Test
+    void testFormatterKeepsSingleBlankLineBetweenWrappedChainSelectors()
+    {
+        String code =
+                """
+                class Test
+                {
+                    Object values()
+                    {
+                        return builder()
+                                .add("abc")
+                                .add("xyz")
+
+                                .add("123")
+                                .build();
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterFixesRepeatedBlankLinesBetweenWrappedChainSelectors()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    Object values()
+                    {
+                        return builder()
+                                .add("abc")
+                                .add("xyz")
+
+
+                                .add("123")
+                                .build();
+                    }
+                }
+                """;
+        String newCode =
+                """
+                class Test
+                {
+                    Object values()
+                    {
+                        return builder()
+                                .add("abc")
+                                .add("xyz")
+
+                                .add("123")
+                                .build();
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsSingleBlankLineBetweenWrappedChainSelectorsInExpression()
+    {
+        String code =
+                """
+                class Test
+                {
+                    Object values(boolean flag)
+                    {
+                        return flag
+                                ? builder()
+                                  .add("abc")
+
+                                  .build()
+                                : fallback();
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterKeepsParenthesizedWrappedChainArgumentCovered()
     {
         String code =

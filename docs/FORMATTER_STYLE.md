@@ -65,6 +65,8 @@ A method chain is a sequence of calls on the same value, such as `.map(...)`, `.
 - When a chain wraps, indent each wrapped method call by the same amount.
 - If a method chain contains a nested call, format the nested call with its normal indentation. Do not push it farther right just because it appears inside the chain.
 - If a chain is already consistently one wrapped call per line, keep it that way.
+- Preserve one blank line between wrapped method calls when it is present in the source.
+- Collapse repeated blank lines between wrapped method calls to a single blank line.
 - When the chain sits inside a conditional expression's then- or else-branch, wrapped selectors align with the chain's own column (the receiver) rather than getting a continuation indent. Outside a conditional branch, wrapped selectors land at the receiver + continuation indent.
 
 ```java
