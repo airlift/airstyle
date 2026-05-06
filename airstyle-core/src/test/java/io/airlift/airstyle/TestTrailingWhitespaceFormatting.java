@@ -44,4 +44,43 @@ public class TestTrailingWhitespaceFormatting
 
         assertFormatsOldToNew(oldCode, newCode);
     }
+
+    @Test
+    void testFormatterKeepsTrailingWhitespaceInsideTextBlockAndComment()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        /*
+                         * keep trailing spaces here:  \s\s
+                         */
+                        String value = \"""
+                                keep trailing spaces here:  \s\s
+                                \""";
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        /*
+                         * keep trailing spaces here:  \s\s
+                         */
+                        String value =
+                                \"""
+                                keep trailing spaces here:  \s\s
+                                \""";
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
 }

@@ -171,7 +171,16 @@ final class JavaTokenRunBuilder
         Block previous = null;
         for (int index = 0; index < ranges.size(); index++) {
             LineRange range = ranges.get(index);
-            Indent lineIndent = index == 0 ? Indent.noneIndent() : Indent.relativeSpaceIndent(range.indentOffset());
+            Indent lineIndent;
+            if (index == 0) {
+                lineIndent = Indent.noneIndent();
+            }
+            else if (range.blankLine()) {
+                lineIndent = Indent.absoluteNoneIndent();
+            }
+            else {
+                lineIndent = Indent.relativeSpaceIndent(range.indentOffset());
+            }
             Block line = leaf(token.start() + range.start(), token.start() + range.end(), token.text(), lineIndent);
             if (previous != null) {
                 textBlock.spacing(previous, line, Spacing.createSpacing(0, 0, 1, true, 99));
@@ -207,7 +216,7 @@ final class JavaTokenRunBuilder
         int closingIndentOffset = preserveHostClosing ? baseIndentOffset : canonicalClosingIndentOffset(text, contentIndent, baseIndentOffset);
 
         List<LineRange> ranges = new ArrayList<>();
-        ranges.add(new LineRange(0, firstNewline, 0));
+        ranges.add(new LineRange(0, firstNewline, 0, false));
 
         int lineStart = firstNewline + 1;
         while (lineStart < text.length()) {
@@ -222,7 +231,9 @@ final class JavaTokenRunBuilder
                     && containsOnlyWhitespace(text, lineStart, quoteStart);
             int contentStart = Math.min(lineStart + contentIndent, lineEnd);
             if (!lastLine && containsOnlyWhitespace(text, contentStart, lineEnd)) {
-                contentStart = lineEnd;
+                ranges.add(new LineRange(lineStart, lineStart, baseIndentOffset, true));
+                lineStart = lineEnd + 1;
+                continue;
             }
             else if (standaloneClosingLine) {
                 contentStart = quoteStart;
@@ -233,7 +244,7 @@ final class JavaTokenRunBuilder
                 indentOffset = closingIndentOffset;
             }
 
-            ranges.add(new LineRange(contentStart, lineEnd, indentOffset));
+            ranges.add(new LineRange(contentStart, lineEnd, indentOffset, false));
             lineStart = lineEnd + 1;
         }
         return List.copyOf(ranges);
@@ -425,5 +436,5 @@ final class JavaTokenRunBuilder
         }
     }
 
-    private record LineRange(int start, int end, int indentOffset) {}
+    private record LineRange(int start, int end, int indentOffset, boolean blankLine) {}
 }
