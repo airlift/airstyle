@@ -8073,9 +8073,9 @@ public class TestWrappedListNormalizer
     }
 
     @Test
-    void testFormatterFixesBlankLineInsideWrappedSelectorChain()
+    void testFormatterKeepsSingleBlankLineInsideWrappedSelectorChain()
     {
-        String oldCode =
+        String code =
                 """
                 class Test
                 {
@@ -8090,21 +8090,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        String newCode =
-                """
-                class Test
-                {
-                    void run()
-                    {
-                        builder
-                                .setFirst(first)
-                                .setSecond(second)
-                                .build();
-                    }
-                }
-                """;
-
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(code);
     }
 
     @Test

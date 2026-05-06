@@ -2271,7 +2271,6 @@ final class JavaExpressionBuilder
         int firstForcedWrapIndex = firstSelectorForcedWrapForLambdaChain(chain, head);
         int startIndex = (head == null) ? 1 : 0;
         int selectorScanStart = (prev != null) ? prev.endOffset() : start;
-        boolean prevSelectorHadCommentBefore = false;
         for (int i = startIndex; i < chain.size(); i++) {
             MethodInvocation mi = chain.get(i);
             int selectorStart = chainBuilder.selectorStart(mi, (i == 0) ? head.getStartPosition() : 0);
@@ -2283,12 +2282,10 @@ final class JavaExpressionBuilder
             // this `.method` call) so chain comments are preserved. Trailing
             // comments on the same line as the previous selector stay inline.
             // Preserve source column alignment (2+ spaces before the comment).
-            boolean emittedCommentBetween = false;
             for (JavaTokens.Token tok : tokensIn(selectorScanStart, selectorStart)) {
                 if (!tok.isComment()) {
                     continue;
                 }
-                emittedCommentBetween = true;
                 int cEnd = (tok.text().endsWith("\n")) ? tok.end() - 1 : tok.end();
                 boolean inlineWithPrev = prev != null
                         && !containsLineBreak(selectorScanStart, tok.start());
@@ -2329,16 +2326,14 @@ final class JavaExpressionBuilder
                     .child(selectorContent)
                     .build();
             if (prev != null) {
-                int keepBlank = (emittedCommentBetween || prevSelectorHadCommentBefore) ? 1 : 0;
                 // Insert ONE line break before the first selector with a
                 // multi-line lambda arg; later selectors follow source.
                 int minLineFeeds = (i == firstForcedWrapIndex) ? 1 : 0;
-                composite.spacing(prev, selector, Spacing.createSpacing(0, 0, minLineFeeds, true, keepBlank));
+                composite.spacing(prev, selector, Spacing.createSpacing(0, 0, minLineFeeds, true, 1));
             }
             composite.child(selector);
             prev = selector;
             selectorScanStart = selectorEnd;
-            prevSelectorHadCommentBefore = emittedCommentBetween;
         }
         return composite.build();
     }
@@ -2643,7 +2638,6 @@ final class JavaExpressionBuilder
 
         int startIndex = (head == null) ? 1 : 0;
         int selectorScanStart = (prevChainChild != null) ? prevChainChild.endOffset() : chainStart;
-        boolean prevSelectorHadCommentBefore = false;
         for (int i = startIndex; i < chain.size(); i++) {
             MethodInvocation mi = chain.get(i);
             int selectorStart = chainBuilder.selectorStart(mi, (i == 0) ? head.getStartPosition() : 0);
@@ -2652,16 +2646,13 @@ final class JavaExpressionBuilder
                 selectorStart = mi.getName().getStartPosition();
             }
             // Emit inter-selector comments (between previous selector and
-            // this `.method` call) so chain comments are preserved. Blank
-            // lines next to a comment are preserved (keepBlankLines=1);
-            // blank lines between raw selectors collapse (keepBlankLines=0)
-            // since the Airlift style has no reason to keep them.
-            boolean emittedCommentBetween = false;
+            // this `.method` call) so chain comments are preserved. Chain
+            // selectors preserve at most one blank line, matching wrapped
+            // list item grouping.
             for (JavaTokens.Token tok : tokensIn(selectorScanStart, selectorStart)) {
                 if (!tok.isComment()) {
                     continue;
                 }
-                emittedCommentBetween = true;
                 int cEnd = (tok.text().endsWith("\n")) ? tok.end() - 1 : tok.end();
                 boolean inlineWithPrev = prevChainChild != null
                         && !containsLineBreak(selectorScanStart, tok.start());
@@ -2698,10 +2689,8 @@ final class JavaExpressionBuilder
                     .child(selectorContent)
                     .build();
             if (prevChainChild != null) {
-                int keepBlank = (emittedCommentBetween || prevSelectorHadCommentBefore) ? 1 : 0;
-                chainBlock.spacing(prevChainChild, selector, Spacing.createSpacing(0, 0, 0, true, keepBlank));
+                chainBlock.spacing(prevChainChild, selector, Spacing.createSpacing(0, 0, 0, true, 1));
             }
-            prevSelectorHadCommentBefore = emittedCommentBetween;
             chainBlock.child(selector);
             prevChainChild = selector;
             selectorScanStart = selectorEnd;
