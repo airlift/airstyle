@@ -15,6 +15,7 @@ package io.airlift.airstyle.normalizer;
 
 import org.junit.jupiter.api.Test;
 
+import static io.airlift.airstyle.FormatterAssertions.assertCanonicalFormatting;
 import static io.airlift.airstyle.FormatterAssertions.assertFormatsOldToNew;
 
 public class TestUnusedImportNormalizer
@@ -98,7 +99,7 @@ public class TestUnusedImportNormalizer
                 public @interface Actor {}
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -216,7 +217,7 @@ public class TestUnusedImportNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -242,7 +243,7 @@ public class TestUnusedImportNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test

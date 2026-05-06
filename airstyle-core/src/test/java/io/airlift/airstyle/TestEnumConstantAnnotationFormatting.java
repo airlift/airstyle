@@ -83,8 +83,11 @@ public class TestEnumConstantAnnotationFormatting
                     @JsonProperty("apple")
                     APPLE,
 
+
+
                     @JsonProperty("banana")
                     BANANA,
+
 
                     @JsonProperty("cherry")
                     CHERRY,

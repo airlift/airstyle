@@ -68,7 +68,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -105,7 +105,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -134,7 +134,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -180,7 +180,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -223,7 +223,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -264,7 +264,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -302,7 +302,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -335,7 +335,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -449,7 +449,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -472,7 +472,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -503,7 +503,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -547,7 +547,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -599,7 +599,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -631,7 +631,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -685,7 +685,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -727,7 +727,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -762,7 +762,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -795,7 +795,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -904,7 +904,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -970,7 +970,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -1008,7 +1008,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -1043,7 +1043,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -1066,7 +1066,7 @@ public class TestCommonPatterns
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
