@@ -555,6 +555,42 @@ public class TestCommentPreservationFormatting
     }
 
     @Test
+    void testFormatterKeepsOpeningBraceLineCommentInEmptyBlock()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            call();
+                        }
+                        catch (RuntimeException e) { // ignore
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try {
+                            call();
+                        }
+                        catch (RuntimeException e) { // ignore
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterKeepsBlockEndCommentsWhenMovingRightCurly()
     {
         String oldCode =
