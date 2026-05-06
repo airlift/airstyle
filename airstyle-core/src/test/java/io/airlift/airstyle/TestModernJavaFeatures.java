@@ -131,6 +131,28 @@ public class TestModernJavaFeatures
         }
 
         @Test
+        @DisplayName("Record field with trailing comment")
+        void testFormatterKeepsTrailingLineCommentOnRecordField()
+        {
+            String input =
+                    """
+                    public record Config(String host, int port)
+                    {
+                        private static final int MIN_SIZE = 5 * 1024 * 1024; // required
+
+                        public Config
+                        {
+                            if (port < 0) {
+                                throw new IllegalArgumentException("port is negative");
+                            }
+                        }
+                    }
+                    """;
+
+            assertCanonicalFormatting(input);
+        }
+
+        @Test
         @DisplayName("Nested records")
         void testNestedRecords()
         {

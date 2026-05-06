@@ -197,30 +197,7 @@ final class JavaDeclarationBuilder
             prev = emitInterBlockComments(composite, prev, scanCursor, memberDecl.getStartPosition());
             boolean commentAttached = prev != prevBeforeComments
                     && !containsBlankLine(prev.endOffset(), memberDecl.getStartPosition());
-            Block memberBlock = buildTypeOrDeclaration(memberDecl);
-            int memberEnd = memberDecl.getStartPosition() + memberDecl.getLength();
-            // Check for a trailing line comment on the same line as the
-            // member declaration (e.g. `int x = 1; // comment`). These
-            // are outside the AST node range but logically part of the member.
-            JavaTokens.Token trailingComment = findTrailingLineComment(memberEnd, bodyEnd);
-            if (trailingComment != null) {
-                int wrapperEnd = trailingComment.text().endsWith("\n") ? trailingComment.end() - 1 : trailingComment.end();
-                JavaBlock.Builder memberWrapper = JavaBlock.builder(memberBlock.startOffset(), wrapperEnd, "MemberWithTrailingComment")
-                        .indent(Indent.normalIndent());
-                memberWrapper.child(memberBlock);
-                Block commentLeafBlock = commentLeaf(trailingComment);
-                int sourceSpaces = max(1, trailingComment.start() - memberEnd);
-                memberWrapper.spacing(memberBlock, commentLeafBlock, Spacing.createSpacing(sourceSpaces, sourceSpaces, 0, false, 0));
-                memberWrapper.child(commentLeafBlock);
-                memberBlock = memberWrapper.build();
-                memberEnd = wrapperEnd;
-            }
-            else {
-                memberBlock = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), "Member")
-                        .indent(Indent.normalIndent())
-                        .child(memberBlock)
-                        .build();
-            }
+            BuiltMember builtMember = buildIndentedMember(memberDecl, bodyEnd, "Member");
             // Enforce blank line between different-kind members (field→method,
             // constructor→method, method→inner type, etc.).
             // Airlift style: blank line between member declarations, except
@@ -232,10 +209,10 @@ final class JavaDeclarationBuilder
             boolean needBlankLine = prevMember != null
                     && !(prevMember instanceof FieldDeclaration && memberDecl instanceof FieldDeclaration);
             int minLines = (needBlankLine && !commentAttached) ? 2 : 1;
-            JavaBlockBuilder.addSibling(composite, prev, memberBlock, Spacing.createSpacing(0, 0, minLines, true, 1));
-            prev = memberBlock;
+            JavaBlockBuilder.addSibling(composite, prev, builtMember.block(), Spacing.createSpacing(0, 0, minLines, true, 1));
+            prev = builtMember.block();
             prevMember = memberDecl;
-            scanCursor = memberEnd;
+            scanCursor = builtMember.endOffset();
         }
         // Trailing comments between last member and `}`.
         if (closeBraceOffset >= 0) {
@@ -299,24 +276,21 @@ final class JavaDeclarationBuilder
 
         BodyDeclaration prevMember = null;
         int recordScanCursor = braceOffset + 1;
+        int bodyEnd = closeBraceOffset < 0 ? end : closeBraceOffset;
         for (Object member : node.bodyDeclarations()) {
             BodyDeclaration memberDecl = (BodyDeclaration) member;
             Block prevBeforeComments = prev;
             prev = emitInterBlockComments(composite, prev, recordScanCursor, memberDecl.getStartPosition());
             boolean commentAttached = prev != prevBeforeComments
                     && !containsBlankLine(prev.endOffset(), memberDecl.getStartPosition());
-            Block memberBlock = buildTypeOrDeclaration(memberDecl);
-            Block wrapped = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), "Member")
-                    .indent(Indent.normalIndent())
-                    .child(memberBlock)
-                    .build();
+            BuiltMember builtMember = buildIndentedMember(memberDecl, bodyEnd, "Member");
             boolean needBlankLine = prevMember != null
                     && !(prevMember instanceof FieldDeclaration && memberDecl instanceof FieldDeclaration);
             int minLines = (needBlankLine && !commentAttached) ? 2 : 1;
-            JavaBlockBuilder.addSibling(composite, prev, wrapped, Spacing.createSpacing(0, 0, minLines, true, 1));
-            prev = wrapped;
+            JavaBlockBuilder.addSibling(composite, prev, builtMember.block(), Spacing.createSpacing(0, 0, minLines, true, 1));
+            prev = builtMember.block();
             prevMember = memberDecl;
-            recordScanCursor = memberDecl.getStartPosition() + memberDecl.getLength();
+            recordScanCursor = builtMember.endOffset();
         }
 
         if (closeBraceOffset >= 0) {
@@ -382,26 +356,23 @@ final class JavaDeclarationBuilder
         }
         BodyDeclaration prevMember = null;
         int annScanCursor = braceOffset + 1;
+        int bodyEnd = closeBraceOffset < 0 ? end : closeBraceOffset;
         for (Object member : node.bodyDeclarations()) {
             BodyDeclaration memberDecl = (BodyDeclaration) member;
             Block prevBeforeComments = prev;
             prev = emitInterBlockComments(composite, prev, annScanCursor, memberDecl.getStartPosition());
             boolean commentAttached = prev != prevBeforeComments
                     && !containsBlankLine(prev.endOffset(), memberDecl.getStartPosition());
-            Block memberBlock = buildTypeOrDeclaration(memberDecl);
-            Block wrapped = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), "AnnMember")
-                    .indent(Indent.normalIndent())
-                    .child(memberBlock)
-                    .build();
+            BuiltMember builtMember = buildIndentedMember(memberDecl, bodyEnd, "AnnMember");
             // Airlift style: blank line between member declarations, except
             // consecutive fields which stay on adjacent lines.
             boolean needBlankLine = prevMember != null
                     && !(prevMember instanceof FieldDeclaration && memberDecl instanceof FieldDeclaration);
             int minLines = (needBlankLine && !commentAttached) ? 2 : 1;
-            JavaBlockBuilder.addSibling(composite, prev, wrapped, Spacing.createSpacing(0, 0, minLines, true, 1));
-            prev = wrapped;
+            JavaBlockBuilder.addSibling(composite, prev, builtMember.block(), Spacing.createSpacing(0, 0, minLines, true, 1));
+            prev = builtMember.block();
             prevMember = memberDecl;
-            annScanCursor = memberDecl.getStartPosition() + memberDecl.getLength();
+            annScanCursor = builtMember.endOffset();
         }
         if (closeBraceOffset >= 0) {
             // Trailing comments between last member and `}`.
@@ -569,21 +540,17 @@ final class JavaDeclarationBuilder
         BodyDeclaration prevMember = null;
         for (Object member : bodyDecls) {
             BodyDeclaration memberDecl = (BodyDeclaration) member;
-            Block memberBlock = buildTypeOrDeclaration(memberDecl);
-            Block wrapped = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), "Member")
-                    .indent(Indent.normalIndent())
-                    .child(memberBlock)
-                    .build();
             // Comments in the gap before this body decl (between enum
             // constants semicolon and first body decl, or between body decls).
-            prev = emitInterBlockComments(composite, prev, enumScanCursor, memberBlock.startOffset());
+            prev = emitInterBlockComments(composite, prev, enumScanCursor, memberDecl.getStartPosition());
+            BuiltMember memberBlock = buildIndentedMember(memberDecl, bodyEnd, "Member");
             // Blank line between enum constants section and body declarations.
             boolean needBlankLine = firstBodyDecl
                     ? !constants.isEmpty()
                     : !(prevMember instanceof FieldDeclaration && memberDecl instanceof FieldDeclaration);
             int minLF = needBlankLine ? 2 : 1;
-            JavaBlockBuilder.addSibling(composite, prev, wrapped, Spacing.createSpacing(0, 0, minLF, true, 1));
-            prev = wrapped;
+            JavaBlockBuilder.addSibling(composite, prev, memberBlock.block(), Spacing.createSpacing(0, 0, minLF, true, 1));
+            prev = memberBlock.block();
             firstBodyDecl = false;
             prevMember = memberDecl;
             enumScanCursor = memberBlock.endOffset();
@@ -1414,6 +1381,36 @@ final class JavaDeclarationBuilder
         }
         return end;
     }
+
+    private BuiltMember buildIndentedMember(BodyDeclaration memberDecl, int bodyEnd, String debugName)
+    {
+        Block memberBlock = buildTypeOrDeclaration(memberDecl);
+        int memberEnd = memberDecl.getStartPosition() + memberDecl.getLength();
+
+        // A trailing comment after a member declaration sits outside the AST
+        // node range, but it belongs to the declaration rather than the gap
+        // before the next member.
+        JavaTokens.Token trailingComment = findTrailingLineComment(memberEnd, bodyEnd);
+        if (trailingComment != null) {
+            int wrapperEnd = trailingComment.text().endsWith("\n") ? trailingComment.end() - 1 : trailingComment.end();
+            JavaBlock.Builder memberWrapper = JavaBlock.builder(memberBlock.startOffset(), wrapperEnd, debugName + "WithTrailingComment")
+                    .indent(Indent.normalIndent());
+            memberWrapper.child(memberBlock);
+            Block commentLeafBlock = commentLeaf(trailingComment);
+            int sourceSpaces = max(1, trailingComment.start() - memberEnd);
+            memberWrapper.spacing(memberBlock, commentLeafBlock, Spacing.createSpacing(sourceSpaces, sourceSpaces, 0, false, 0));
+            memberWrapper.child(commentLeafBlock);
+            return new BuiltMember(memberWrapper.build(), wrapperEnd);
+        }
+
+        Block wrapped = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), debugName)
+                .indent(Indent.normalIndent())
+                .child(memberBlock)
+                .build();
+        return new BuiltMember(wrapped, memberEnd);
+    }
+
+    private record BuiltMember(Block block, int endOffset) {}
 
     /// Like [#emitInterBlockComments] but emits the FIRST comment inline
     /// with the previous sibling (preserving source shape like

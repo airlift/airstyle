@@ -198,6 +198,29 @@ public class TestDeclarationStructureFormatting
     }
 
     @Test
+    void testFormatterKeepsTrailingLineCommentOnAnonymousClassField()
+    {
+        String code =
+                """
+                class Test
+                {
+                    Object value = new Object()
+                    {
+                        private static final int MIN_SIZE = 5 * 1024 * 1024; // required
+
+                        @Override
+                        public String toString()
+                        {
+                            return "value";
+                        }
+                    };
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterFixesWrappedGenericWildcardInPatternMatch()
     {
         String oldCode =

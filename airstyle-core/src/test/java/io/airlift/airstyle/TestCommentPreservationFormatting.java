@@ -21,6 +21,35 @@ import static io.airlift.airstyle.FormatterAssertions.assertFormatsOldToNew;
 public class TestCommentPreservationFormatting
 {
     @Test
+    void testFormatterKeepsTrailingLineCommentOnTopLevelType()
+    {
+        String code =
+                """
+                class Test {} // generated
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsTrailingLineCommentsOnPackageAndImportDeclarations()
+    {
+        String code =
+                """
+                package test; // generated
+
+                import java.util.List; // used by field
+
+                class Test
+                {
+                    private List<String> values;
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterKeepsCommentsBeforeFirstWrappedArgument()
     {
         String code =
