@@ -14,6 +14,7 @@
 package io.airlift.airstyle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public final class FormatterAssertions
 {
@@ -23,6 +24,17 @@ public final class FormatterAssertions
 
     public static void assertFormatsOldToNew(String oldCode, String newCode)
     {
+        assertNotEquals(oldCode, newCode, "assertFormatsOldToNew requires different input and expected output; use assertCanonicalFormatting for already-canonical code");
+        assertFormatsTo(oldCode, newCode);
+    }
+
+    public static void assertCanonicalFormatting(String source)
+    {
+        assertFormatsTo(source, source);
+    }
+
+    private static void assertFormatsTo(String oldCode, String newCode)
+    {
         assertEquals(newCode, FORMATTER.format(oldCode));
 
         // Second-pass idempotence: formatting the expected output must produce
@@ -30,16 +42,12 @@ public final class FormatterAssertions
         assertEquals(newCode, FORMATTER.format(newCode), "Formatting is not idempotent");
     }
 
-    public static void assertCanonicalFormatting(String source)
-    {
-        assertFormatsOldToNew(source, source);
-    }
-
     /// Asserts the formatter returns unparseable input unchanged — i.e. that
     /// the syntax-error fallback path preserves the source. Use for tests
     /// whose input is deliberately unparseable (malformed syntax, preview
     /// features the runtime doesn't recognize). [#assertFormatsOldToNew]
-    /// cannot be used here because its validator asserts parseability.
+    /// should not be used here because these cases do not expect formatting
+    /// changes.
     public static void assertUnparseableInputUnchanged(String source)
     {
         assertEquals(source, FORMATTER.format(source));

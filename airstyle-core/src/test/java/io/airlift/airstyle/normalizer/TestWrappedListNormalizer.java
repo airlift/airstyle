@@ -8276,7 +8276,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -14034,7 +14034,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -14140,7 +14140,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -14250,7 +14250,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -17216,7 +17216,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test
@@ -17260,7 +17260,7 @@ public class TestWrappedListNormalizer
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test

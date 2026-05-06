@@ -94,7 +94,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -127,7 +127,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -220,7 +220,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -264,7 +264,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -341,7 +341,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -374,7 +374,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -581,7 +581,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -618,7 +618,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -653,7 +653,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -692,7 +692,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -742,7 +742,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -785,7 +785,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -965,7 +965,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -994,7 +994,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -1033,7 +1033,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -1070,7 +1070,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -1116,7 +1116,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
 
         @Test
@@ -1155,7 +1155,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 
@@ -1272,7 +1272,7 @@ public class TestModernJavaFeatures
                     }
                     """;
 
-            assertFormatsOldToNew(input, expected);
+            assertCanonicalFormatting(input);
         }
     }
 

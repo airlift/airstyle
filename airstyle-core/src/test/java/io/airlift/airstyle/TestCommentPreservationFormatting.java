@@ -557,7 +557,7 @@ public class TestCommentPreservationFormatting
     @Test
     void testFormatterKeepsOpeningBraceLineCommentInEmptyBlock()
     {
-        String oldCode =
+        String code =
                 """
                 class Test
                 {
@@ -572,22 +572,7 @@ public class TestCommentPreservationFormatting
                 }
                 """;
 
-        String newCode =
-                """
-                class Test
-                {
-                    void run()
-                    {
-                        try {
-                            call();
-                        }
-                        catch (RuntimeException e) { // ignore
-                        }
-                    }
-                }
-                """;
-
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(code);
     }
 
     @Test
@@ -1566,7 +1551,7 @@ public class TestCommentPreservationFormatting
                 }
                 """;
 
-        assertFormatsOldToNew(oldCode, newCode);
+        assertCanonicalFormatting(oldCode);
     }
 
     @Test

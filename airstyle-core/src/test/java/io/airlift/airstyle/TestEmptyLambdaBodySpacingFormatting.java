@@ -15,6 +15,7 @@ package io.airlift.airstyle;
 
 import org.junit.jupiter.api.Test;
 
+import static io.airlift.airstyle.FormatterAssertions.assertCanonicalFormatting;
 import static io.airlift.airstyle.FormatterAssertions.assertFormatsOldToNew;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -83,7 +84,7 @@ public class TestEmptyLambdaBodySpacingFormatting
                 }
                 """;
 
-        assertFormatsOldToNew(code, code);
+        assertCanonicalFormatting(code);
     }
 
     @Test
