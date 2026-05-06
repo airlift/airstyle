@@ -194,7 +194,8 @@ final class JavaStatementBuilder
             // `catch (Exception e) { // ignore }`). Without this, the
             // engine would collapse the block to `{}` and lose comments.
             List<JavaTokens.Token> bodyComments = new ArrayList<>();
-            for (JavaTokens.Token tok : tokensIn(openBraceOffset + 1, closeBraceOffset)) {
+            int bodyCommentScanStart = braceTrailingComment == null ? openBraceOffset + 1 : braceTrailingComment.end();
+            for (JavaTokens.Token tok : tokensIn(bodyCommentScanStart, closeBraceOffset)) {
                 if (tok.isComment()) {
                     bodyComments.add(tok);
                 }
