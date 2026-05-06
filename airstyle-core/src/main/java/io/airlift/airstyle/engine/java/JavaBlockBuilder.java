@@ -264,6 +264,12 @@ public final class JavaBlockBuilder
             hasPreamble = true;
         }
         if (pkg != null) {
+            int packageEnd = pkg.getStartPosition() + pkg.getLength();
+            BuiltTopLevel builtPackage = buildTopLevelWithTrailingComment(
+                    buildTokensSpanning(pkg, "package"),
+                    packageEnd,
+                    source.length(),
+                    "PackageWithTrailingComment");
             // After a preamble (typically a comment), no forced blank line.
             Spacing pkgSpacing = Spacing.createSpacing(0, 0, 1, true, 1);
             prev = attachTopLevel(
@@ -271,26 +277,37 @@ public final class JavaBlockBuilder
                     prev,
                     cursor,
                     pkg.getStartPosition(),
-                    buildTokensSpanning(pkg, "package"),
+                    builtPackage.block(),
                     pkgSpacing);
-            cursor = pkg.getStartPosition() + pkg.getLength();
+            cursor = builtPackage.endOffset();
             hasPreamble = false;
         }
         for (Object imp : unit.imports()) {
             ASTNode node = (ASTNode) imp;
             int importEnd = endOfImportDeclaration(node);
+            BuiltTopLevel builtImport = buildTopLevelWithTrailingComment(
+                    buildImportDeclaration(node, importEnd),
+                    importEnd,
+                    source.length(),
+                    "ImportWithTrailingComment");
             prev = attachTopLevel(
                     root,
                     prev,
                     cursor,
                     node.getStartPosition(),
-                    buildImportDeclaration(node, importEnd),
+                    builtImport.block(),
                     Spacing.createSpacing(0, 0, 1, true, 1));
-            cursor = importEnd;
+            cursor = builtImport.endOffset();
             hasPreamble = false;
         }
         for (Object type : unit.types()) {
             ASTNode node = (ASTNode) type;
+            int typeEnd = node.getStartPosition() + node.getLength();
+            BuiltTopLevel builtType = buildTopLevelWithTrailingComment(
+                    buildTypeOrDeclaration((BodyDeclaration) type),
+                    typeEnd,
+                    source.length(),
+                    "TopLevelTypeWithTrailingComment");
             // After a preamble (comment directly preceding the type), the
             // type follows on the next line without forcing a blank line.
             Spacing typeSpacing = hasPreamble
@@ -301,9 +318,9 @@ public final class JavaBlockBuilder
                     prev,
                     cursor,
                     node.getStartPosition(),
-                    buildTypeOrDeclaration((BodyDeclaration) type),
+                    builtType.block(),
                     typeSpacing);
-            cursor = node.getStartPosition() + node.getLength();
+            cursor = builtType.endOffset();
             hasPreamble = false;
         }
         if (cursor < source.length() && containsNonWhitespace(cursor, source.length())) {
@@ -317,6 +334,25 @@ public final class JavaBlockBuilder
         }
         return root.build();
     }
+
+    private BuiltTopLevel buildTopLevelWithTrailingComment(Block block, int elementEnd, int rangeEnd, String debugName)
+    {
+        JavaTokens.Token trailingComment = findTrailingLineComment(elementEnd, rangeEnd);
+        if (trailingComment == null) {
+            return new BuiltTopLevel(block, elementEnd);
+        }
+
+        int wrapperEnd = trailingComment.text().endsWith("\n") ? trailingComment.end() - 1 : trailingComment.end();
+        JavaBlock.Builder wrapper = JavaBlock.builder(block.startOffset(), wrapperEnd, debugName);
+        wrapper.child(block);
+        Block commentLeafBlock = commentLeaf(trailingComment);
+        int sourceSpaces = max(1, trailingComment.start() - elementEnd);
+        wrapper.spacing(block, commentLeafBlock, Spacing.createSpacing(sourceSpaces, sourceSpaces, 0, false, 0));
+        wrapper.child(commentLeafBlock);
+        return new BuiltTopLevel(wrapper.build(), wrapperEnd);
+    }
+
+    private record BuiltTopLevel(Block block, int endOffset) {}
 
     /// Attach a top-level `child` to `root`, first emitting any
     /// inter-block tokens (Javadoc comments between imports and types, etc.)
@@ -1199,18 +1235,14 @@ public final class JavaBlockBuilder
             prev = emitInterBlockComments(composite, prev, anonScanCursor, memberDecl.getStartPosition());
             boolean commentAttached = prev != prevBeforeComments
                     && !containsBlankLine(prev.endOffset(), memberDecl.getStartPosition());
-            Block memberBlock = buildTypeOrDeclaration(memberDecl);
-            Block wrapped = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), "AnonMember")
-                    .indent(Indent.absoluteSpaceIndent(anchorColumn + Indent.NORMAL_SIZE))
-                    .child(memberBlock)
-                    .build();
+            BuiltAnonymousMember builtMember = buildAnonymousMember(memberDecl, closeBrace, anchorColumn);
             boolean needBlankLine = prevMember != null
                     && !(prevMember instanceof FieldDeclaration && memberDecl instanceof FieldDeclaration);
             int minLines = (needBlankLine && !commentAttached) ? 2 : 1;
-            addSibling(composite, prev, wrapped, Spacing.createSpacing(0, 0, minLines, true, 1));
-            prev = wrapped;
+            addSibling(composite, prev, builtMember.block(), Spacing.createSpacing(0, 0, minLines, true, 1));
+            prev = builtMember.block();
             prevMember = memberDecl;
-            anonScanCursor = memberDecl.getStartPosition() + memberDecl.getLength();
+            anonScanCursor = builtMember.endOffset();
         }
 
         prev = emitInterBlockComments(composite, prev, anonScanCursor, closeBrace);
@@ -1221,6 +1253,34 @@ public final class JavaBlockBuilder
         addSibling(composite, prev, closeBraceBlock, Spacing.createSpacing(0, 0, 1, true, 0));
         return composite.build();
     }
+
+    private BuiltAnonymousMember buildAnonymousMember(BodyDeclaration memberDecl, int bodyEnd, int anchorColumn)
+    {
+        Block memberBlock = buildTypeOrDeclaration(memberDecl);
+        int memberEnd = memberDecl.getStartPosition() + memberDecl.getLength();
+        Indent memberIndent = Indent.absoluteSpaceIndent(anchorColumn + Indent.NORMAL_SIZE);
+
+        JavaTokens.Token trailingComment = findTrailingLineComment(memberEnd, bodyEnd);
+        if (trailingComment != null) {
+            int wrapperEnd = trailingComment.text().endsWith("\n") ? trailingComment.end() - 1 : trailingComment.end();
+            JavaBlock.Builder wrapper = JavaBlock.builder(memberBlock.startOffset(), wrapperEnd, "AnonMemberWithTrailingComment")
+                    .indent(memberIndent);
+            wrapper.child(memberBlock);
+            Block commentLeafBlock = commentLeaf(trailingComment);
+            int sourceSpaces = max(1, trailingComment.start() - memberEnd);
+            wrapper.spacing(memberBlock, commentLeafBlock, Spacing.createSpacing(sourceSpaces, sourceSpaces, 0, false, 0));
+            wrapper.child(commentLeafBlock);
+            return new BuiltAnonymousMember(wrapper.build(), wrapperEnd);
+        }
+
+        Block wrapped = JavaBlock.builder(memberBlock.startOffset(), memberBlock.endOffset(), "AnonMember")
+                .indent(memberIndent)
+                .child(memberBlock)
+                .build();
+        return new BuiltAnonymousMember(wrapped, memberEnd);
+    }
+
+    private record BuiltAnonymousMember(Block block, int endOffset) {}
 
     Spacing spacingBeforeAnonymousClass(AnonymousClassDeclaration node)
     {
