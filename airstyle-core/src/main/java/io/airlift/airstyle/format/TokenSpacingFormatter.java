@@ -123,34 +123,62 @@ public final class TokenSpacingFormatter
         }
     }
 
-    /// Strip trailing spaces/tabs from every line. Unlike
-    /// [String#stripTrailing()], which only strips the tail of the
-    /// whole string, this trims each line independently and preserves
-    /// every `\\n`.
+    /// Strip trailing spaces/tabs from scanner gaps only, preserving comment
+    /// and literal token contents.
     private static String removeTrailingWhitespace(String source)
     {
-        StringBuilder result = new StringBuilder(source.length());
-        int lineStart = 0;
-        for (int i = 0; i < source.length(); i++) {
+        IScanner scanner = createCommentAwareScanner();
+        scanner.setSource(source.toCharArray());
+        List<SpacingEdit> edits = new ArrayList<>();
+        try {
+            int prevEnd = 0;
+            while (true) {
+                int token = scanner.getNextToken();
+                if (token == ITerminalSymbols.TokenNameEOF) {
+                    addTrailingWhitespaceEdits(source, prevEnd, source.length(), true, edits);
+                    break;
+                }
+                int start = scanner.getCurrentTokenStartPosition();
+                addTrailingWhitespaceEdits(source, prevEnd, start, false, edits);
+                prevEnd = scanner.getCurrentTokenEndPosition() + 1;
+            }
+        }
+        catch (InvalidInputException _) {
+            return source;
+        }
+        return applyEdits(source, edits);
+    }
+
+    private static void addTrailingWhitespaceEdits(String source, int start, int end, boolean trimEnd, List<SpacingEdit> edits)
+    {
+        int safeEnd = Math.min(end, source.length());
+        int segmentStart = Math.max(0, start);
+        for (int i = segmentStart; i < safeEnd; i++) {
             if (source.charAt(i) == '\n') {
                 int contentEnd = i;
-                while (contentEnd > lineStart && (source.charAt(contentEnd - 1) == ' ' || source.charAt(contentEnd - 1) == '\t')) {
+                while (contentEnd > segmentStart && isHorizontalWhitespace(source.charAt(contentEnd - 1))) {
                     contentEnd--;
                 }
-                result.append(source, lineStart, contentEnd);
-                result.append('\n');
-                lineStart = i + 1;
+                if (contentEnd < i) {
+                    edits.add(new SpacingEdit(contentEnd, i, ""));
+                }
+                segmentStart = i + 1;
             }
         }
-        if (lineStart < source.length()) {
-            int contentEnd = source.length();
-            while (contentEnd > lineStart && (source.charAt(contentEnd - 1) == ' ' || source.charAt(contentEnd - 1) == '\t')) {
+        if (trimEnd) {
+            int contentEnd = safeEnd;
+            while (contentEnd > segmentStart && isHorizontalWhitespace(source.charAt(contentEnd - 1))) {
                 contentEnd--;
             }
-            result.append(source, lineStart, contentEnd);
+            if (contentEnd < safeEnd) {
+                edits.add(new SpacingEdit(contentEnd, safeEnd, ""));
+            }
         }
-        String cleaned = result.toString();
-        return cleaned.equals(source) ? source : cleaned;
+    }
+
+    private static boolean isHorizontalWhitespace(char ch)
+    {
+        return ch == ' ' || ch == '\t';
     }
 
     private static IScanner createCommentAwareScanner()

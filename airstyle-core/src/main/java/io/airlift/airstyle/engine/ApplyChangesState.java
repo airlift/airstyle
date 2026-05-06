@@ -121,7 +121,11 @@ public final class ApplyChangesState
             normalized.append('\n');
             String line = lines[i];
             String stripped = line.stripLeading();
-            if (stripped.startsWith("*/") && leadingSpaces(line) < openingIndent) {
+            if (line.isBlank()) {
+                // Blank lines inside block comments should remain blank after
+                // indent shifting, rather than keeping incidental padding.
+            }
+            else if (stripped.startsWith("*/") && leadingSpaces(line) < openingIndent) {
                 normalized.repeat(' ', openingIndent);
                 normalized.append(stripped);
             }
