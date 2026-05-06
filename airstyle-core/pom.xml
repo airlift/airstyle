@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.airlift</groupId>
         <artifactId>airstyle-root</artifactId>
-        <version>6-SNAPSHOT</version>
+        <version>6</version>
     </parent>
 
     <artifactId>airstyle-core</artifactId>
