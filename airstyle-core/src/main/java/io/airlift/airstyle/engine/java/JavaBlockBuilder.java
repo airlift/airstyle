@@ -668,27 +668,7 @@ public final class JavaBlockBuilder
     /// `stmtEnd`. Returns null if no such comment exists.
     JavaTokens.Token findTrailingLineComment(int stmtEnd, int rangeEnd)
     {
-        // The trailing comment must be on the same line as the end of the
-        // statement (no newline between stmtEnd and the comment start).
-        // Both line comments (`//`) and block comments (`/* */`) qualify.
-        for (JavaTokens.Token tok : tokens) {
-            if (tok.start() >= rangeEnd) {
-                break;
-            }
-            if (tok.start() >= stmtEnd && tok.isComment()
-                    && (tok.type() == ITerminalSymbols.TokenNameCOMMENT_LINE
-                    || tok.type() == ITerminalSymbols.TokenNameCOMMENT_BLOCK)) {
-                // Check no newline between stmtEnd and this comment.
-                if (!containsLineBreak(stmtEnd, tok.start())) {
-                    return tok;
-                }
-                break; // Past the line — no trailing comment.
-            }
-            if (tok.start() >= stmtEnd && !tok.isComment()) {
-                break; // Non-comment token after statement — no trailing comment.
-            }
-        }
-        return null;
+        return JavaCommentBlocks.trailingInlineComment(tokens, source, stmtEnd, rangeEnd);
     }
 
     /// Indent for a comment: NORMAL indent for most comments, but
@@ -696,12 +676,7 @@ public final class JavaBlockBuilder
     /// (KEEP_FIRST_COLUMN_COMMENT behavior).
     Indent commentIndent(JavaTokens.Token tok, Indent defaultIndent)
     {
-        // Markdown javadoc (`///`) is documentation: always indent to match
-        // the enclosing context, never preserved at column 0.
-        if (tok.type() == ITerminalSymbols.TokenNameCOMMENT_MARKDOWN) {
-            return defaultIndent;
-        }
-        return (columnOf(tok.start()) == 0) ? Indent.absoluteNoneIndent() : defaultIndent;
+        return JavaCommentBlocks.indent(source, tok, defaultIndent);
     }
 
     /// Create a leaf block for a comment token. Line comments (`//...`) in
@@ -710,19 +685,7 @@ public final class JavaBlockBuilder
     /// rather than being baked into the leaf text.
     static Block commentLeaf(JavaTokens.Token tok)
     {
-        int commentEnd = tok.end();
-        String text = tok.text();
-        // JDT line comments and markdown javadoc (`///`) tokens include a
-        // trailing `\n`; strip it so the engine's whitespace computation can
-        // place the next sibling with the proper indent.
-        boolean trailingNewlineComment =
-                tok.type() == ITerminalSymbols.TokenNameCOMMENT_LINE
-                        || tok.type() == ITerminalSymbols.TokenNameCOMMENT_MARKDOWN;
-        if (trailingNewlineComment && text.endsWith("\n")) {
-            commentEnd--;
-            text = text.substring(0, text.length() - 1);
-        }
-        return JavaBlock.leaf(tok.start(), commentEnd, text);
+        return JavaCommentBlocks.leaf(tok);
     }
 
     /// Scan for comment tokens between two blocks and emit them as children

@@ -153,6 +153,23 @@ public class TestModernJavaFeatures
         }
 
         @Test
+        @DisplayName("Record header with consecutive trailing comments")
+        void testFormatterKeepsConsecutiveCommentsBeforeRecordHeaderClose()
+        {
+            String input =
+                    """
+                    public record Config(
+                            String host,
+                            int port
+                            // first
+                            // second
+                    ) {}
+                    """;
+
+            assertCanonicalFormatting(input);
+        }
+
+        @Test
         @DisplayName("Nested records")
         void testNestedRecords()
         {
