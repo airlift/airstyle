@@ -303,13 +303,13 @@ final class JavaTokenRunBuilder
         int closingDelimiterStart = text.length() - 3;
         int minimum = Integer.MAX_VALUE;
         int lineStart = firstNewline + 1;
-        while (lineStart < text.length()) {
+        while (lineStart < closingDelimiterStart) {
             int lineEnd = text.indexOf('\n', lineStart);
             if (lineEnd < 0) {
-                lineEnd = text.length();
+                lineEnd = closingDelimiterStart;
             }
 
-            if (!(lineStart <= closingDelimiterStart && closingDelimiterStart <= lineEnd)) {
+            if (!(closingDelimiterStart < lineEnd)) {
                 int firstNonWhitespace = firstNonWhitespace(text, lineStart, lineEnd);
                 if (firstNonWhitespace < lineEnd) {
                     minimum = Math.min(minimum, firstNonWhitespace - lineStart);
