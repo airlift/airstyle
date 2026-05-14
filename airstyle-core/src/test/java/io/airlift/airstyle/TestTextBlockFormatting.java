@@ -1295,6 +1295,26 @@ public class TestTextBlockFormatting
     }
 
     @Test
+    void testFormatterKeepsLeadingWhitespaceOnFinalTextBlockContentLineWithSmallerIndent()
+    {
+        String code =
+                """
+                class Test
+                {
+                    String run()
+                    {
+                        return \"""
+                                   first
+                               second\""";
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+        assertEquals(firstTextBlockLiteralValue(code), firstTextBlockLiteralValue(formatter.format(code)));
+    }
+
+    @Test
     void testFormatterFixesAssignmentTextBlockHostIndentationWithEscapedClosingLine()
     {
         String oldCode =
