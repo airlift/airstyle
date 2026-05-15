@@ -81,6 +81,27 @@ public class TestAnnotationUseStyleFormatting
     }
 
     @Test
+    void testMultiLineAnnotationArgsKeepContinuationIndentWithArrayBlock()
+    {
+        String code =
+                """
+                class Test
+                {
+                    @McpTool(
+                            name = "debug-tool",
+                            description = "Comprehensive debug tool",
+                            app = {
+                                    @McpApp(resourceUri = "ui://debug-tool/mcp-app.html",
+                                            sourcePath = "debug-app.html"),
+                            })
+                    void run() {}
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testMethodDeclWithWrappedAnnotationAndWrappedParamsKeepsAnnotationContinuation()
     {
         String code =
