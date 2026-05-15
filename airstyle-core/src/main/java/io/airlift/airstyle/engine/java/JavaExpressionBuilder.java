@@ -885,7 +885,17 @@ final class JavaExpressionBuilder
         // Nested annotation (e.g. `@App(...)` as a member value). Decompose
         // via buildAnnotationBlock so wrapped args get CONTINUATION indent.
         if (expr instanceof Annotation ann && containsLineBreak(start, start + expr.getLength())) {
-            return buildAnnotationBlock(ann);
+            Block annBlock = buildAnnotationBlock(ann);
+            int annEnd = ann.getStartPosition() + ann.getLength();
+            if (annEnd >= end) {
+                return annBlock;
+            }
+            // trailing tokens, like a comma after array element:
+            JavaBlock.Builder composite = JavaBlock.builder(start, end, debugName);
+            composite.child(annBlock);
+            Block trailing = owner.buildTokensRange(annEnd, end, "AnnotationTrailing");
+            addSibling(composite, annBlock, trailing, Spacing.none());
+            return composite.build();
         }
         // ClassInstanceCreation with anonymous class body.
         if (expr instanceof ClassInstanceCreation cic && cic.getAnonymousClassDeclaration() != null) {
