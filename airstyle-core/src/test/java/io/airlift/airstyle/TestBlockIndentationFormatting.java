@@ -1880,6 +1880,40 @@ public class TestBlockIndentationFormatting
     }
 
     @Test
+    void testFormatterFixesTryResourceInitializerContinuationIndent()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try (X x =
+                        a.b().c(x)) {
+                            blah();
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        try (X x =
+                                a.b().c(x)) {
+                            blah();
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterFixesMixedTryResourcesWithSynchronizedBlock()
     {
         String oldCode =

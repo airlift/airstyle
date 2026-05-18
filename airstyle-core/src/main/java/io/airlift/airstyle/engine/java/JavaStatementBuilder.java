@@ -869,10 +869,19 @@ final class JavaStatementBuilder
                 Block prePart = owner.buildTokensRange(resStart, initStart, "ResPrefix" + i);
                 rb.child(prePart);
                 Block initBlock = owner.buildExpressionBlock(init, initStart, initEnd, "ResInit" + i);
-                addSibling(rb, prePart, initBlock, JavaSpacingRules.keepLineOrSpace());
+                int eqEnd = -1;
+                for (JavaTokens.Token tok : tokensIn(resStart, initStart)) {
+                    if (tok.type() == ITerminalSymbols.TokenNameEQUAL) {
+                        eqEnd = tok.end();
+                    }
+                }
+                Block initChild = (eqEnd >= 0 && containsLineBreak(eqEnd, initStart))
+                        ? JavaBlock.continuationWrap(initStart, initEnd, initBlock, "ResInitWrap" + i)
+                        : initBlock;
+                addSibling(rb, prePart, initChild, JavaSpacingRules.keepLineOrSpace());
                 if (initEnd < resEnd) {
                     Block tailPart = owner.buildTokensRange(initEnd, resEnd, "ResTail" + i);
-                    addSibling(rb, initBlock, tailPart, Spacing.none());
+                    addSibling(rb, initChild, tailPart, Spacing.none());
                 }
                 resTokens = rb.build();
             }
