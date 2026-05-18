@@ -202,8 +202,12 @@ final class JavaLoopConstructBuilder
         }
 
         if (rparen < bodyStart) {
+            // Empty update slot: keep `; )` (EmptyForIteratorPad).
+            Spacing suffixSpacing = (semicolons.length >= 2 && updaters.isEmpty())
+                    ? Spacing.oneSpace()
+                    : Spacing.none();
             Block suffix = support.buildTokensRange(rparen, bodyStart, debugName + "HeaderSuffix");
-            support.addSibling(header, prev, suffix, Spacing.none());
+            support.addSibling(header, prev, suffix, suffixSpacing);
         }
         return header.build();
     }
