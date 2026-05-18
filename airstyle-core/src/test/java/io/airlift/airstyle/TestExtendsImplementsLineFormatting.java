@@ -488,6 +488,48 @@ public class TestExtendsImplementsLineFormatting
     }
 
     @Test
+    void testFormatterKeepsTrailingLineCommentBetweenPermitsEntries()
+    {
+        String code =
+                """
+                public sealed interface Fruit
+                        permits Apple,
+                                Banana, // note
+                                Orange {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsTrailingLineCommentBetweenImplementsEntries()
+    {
+        String code =
+                """
+                class Test
+                        implements Apple,
+                                   Banana, // note
+                                   Orange {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsTrailingLineCommentBetweenExtendsEntries()
+    {
+        String code =
+                """
+                interface Test
+                        extends Apple,
+                                Banana, // note
+                                Orange {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterKeepsClassMethodOrderWithWrappedImplementsClause()
     {
         String code =
