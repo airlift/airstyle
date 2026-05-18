@@ -765,6 +765,33 @@ final class JavaDeclarationBuilder
                     : Spacing.createSpacing(1, 1, 0, true, 0);
             JavaBlockBuilder.addSibling(clauseBlock, prev, item, spacing);
             prev = item;
+
+            // Inter-item comments (e.g. `Foo, // note\n Bar`) must be covered
+            // by their own block; otherwise they fall into a child-gap and
+            // get dropped by ApplyChangesState.
+            if (index < types.size() - 1) {
+                int nextStart = types.get(index + 1).getStartPosition();
+                int scanCursor = itemEnd;
+                for (JavaTokens.Token tok : tokensIn(scanCursor, nextStart)) {
+                    if (!tok.isComment()) {
+                        continue;
+                    }
+                    int cEnd = tok.text().endsWith("\n") ? tok.end() - 1 : tok.end();
+                    boolean inlineWithPrev = !containsLineBreak(scanCursor, tok.start());
+                    Block commentBlock = JavaBlock.builder(tok.start(), cEnd, "TypeClauseInlineComment")
+                            .indent(inlineWithPrev
+                                    ? Indent.noneIndent()
+                                    : Indent.relativeSpaceIndent(clause.keyword().length() + 1))
+                            .child(commentLeaf(tok))
+                            .build();
+                    Spacing commentSpacing = inlineWithPrev
+                            ? Spacing.createSpacing(1, 1, 0, false, 0)
+                            : Spacing.createSpacing(0, 0, 1, true, 0);
+                    JavaBlockBuilder.addSibling(clauseBlock, prev, commentBlock, commentSpacing);
+                    prev = commentBlock;
+                    scanCursor = cEnd;
+                }
+            }
         }
 
         if (prev.endOffset() < clauseEnd && !sourceOnlyWhitespace(prev.endOffset(), clauseEnd)) {
