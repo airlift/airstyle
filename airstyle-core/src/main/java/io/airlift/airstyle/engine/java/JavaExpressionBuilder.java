@@ -1865,10 +1865,22 @@ final class JavaExpressionBuilder
         // its operands get spaceIndent(0, relativeToDirectParent=true). That
         // anchors each nested operator to the direct parent expression column,
         // not to the original source column.
+        // Exception: when the path to the enclosing ternary passes through a
+        // method call (e.g. Optional.of(inner ? a : b) in a ternary else-branch),
+        // the relativeSpaceIndent base is the outer branch's column. The branches
+        // of the inner ternary need +CONTINUATION from there, so use
+        // relativeSpaceIndent(CONTINUATION_SIZE) rather than relativeSpaceIndent(0).
         boolean nestedInTernaryBranch = isInsideTernaryBranch(cond);
-        Indent branchIndent = nestedInTernaryBranch
-                ? Indent.relativeSpaceIndent(0)
-                : Indent.continuationIndent();
+        Indent branchIndent;
+        if (!nestedInTernaryBranch) {
+            branchIndent = Indent.continuationIndent();
+        }
+        else if (cond.getParent() instanceof ConditionalExpression) {
+            branchIndent = Indent.relativeSpaceIndent(0);
+        }
+        else {
+            branchIndent = Indent.relativeSpaceIndent(Indent.CONTINUATION_SIZE);
+        }
 
         // Condition part (up to `?`).
         Block condBlock = buildExpressionBlock(condition, start, condEnd, "TernaryCondition");

@@ -564,4 +564,39 @@ public class TestComplexExpressionFormatting
 
         assertFormatsOldToNew(oldCode, newCode);
     }
+
+    @Test
+    void testFormatterFixesTernaryInsideCallInsideOuterTernaryBranch()
+    {
+        // Inner ternary is the argument to a method call that is itself inside
+        // an outer ternary else-branch. The inner branches must be at
+        // double-continuation (col 24), not at the outer branch level (col 16).
+        assertFormatsOldToNew(
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        Object x = cond1 ?
+                                first() :
+                                of(cond2 ?
+                                second() :
+                                third());
+                    }
+                }
+                """,
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        Object x = cond1 ?
+                                first() :
+                                of(cond2 ?
+                                        second() :
+                                        third());
+                    }
+                }
+                """);
+    }
 }

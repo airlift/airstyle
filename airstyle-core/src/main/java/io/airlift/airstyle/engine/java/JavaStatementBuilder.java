@@ -1426,8 +1426,8 @@ final class JavaStatementBuilder
             Spacing sp = (i == 0)
                     ? Spacing.oneSpace()
                     : (containsLineBreak(prev.endOffset(), pStart)
-                       ? Spacing.createSpacing(0, 0, 1, false, 0)
-                       : Spacing.oneSpace());
+                               ? Spacing.createSpacing(0, 0, 1, false, 0)
+                               : Spacing.oneSpace());
             addSibling(composite, prev, patBlock, sp);
             prev = patBlock;
             prevEnd = pEnd;
