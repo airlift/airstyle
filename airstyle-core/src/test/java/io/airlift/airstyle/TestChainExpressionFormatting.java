@@ -864,4 +864,64 @@ public class TestChainExpressionFormatting
 
         assertCanonicalFormatting(code);
     }
+
+    @Test
+    void testFormatterFixesUnderIndentedSelectorAfterWrappedReceiverWithFieldAccess()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        blah
+                        .x.y();
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        blah
+                                .x.y();
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterFixesUnderIndentedSelectorAfterWrappedCallWithFieldAccess()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        foo()
+                        .x.y();
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        foo()
+                                .x.y();
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
 }

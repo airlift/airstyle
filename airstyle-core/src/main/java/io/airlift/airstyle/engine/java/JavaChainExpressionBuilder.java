@@ -225,6 +225,12 @@ final class JavaChainExpressionBuilder
         return owner.buildLeafTokenRun(range.chunkRange(chunkStart, chunkEnd), debugName);
     }
 
+    int firstWrappedSelectorStart(int start, int end)
+    {
+        List<Integer> starts = wrappedSelectorStartsInOwnedRange(start, end);
+        return starts.isEmpty() ? -1 : starts.getFirst();
+    }
+
     /// Low-level token scanner for selector-like dots. Callers must first
     /// narrow the range to the AST child that owns those dots; scanning a
     /// whole expression also sees nested argument expressions.

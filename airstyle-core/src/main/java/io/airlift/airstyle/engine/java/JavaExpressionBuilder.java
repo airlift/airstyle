@@ -832,6 +832,19 @@ final class JavaExpressionBuilder
         if (expr instanceof MethodInvocation mi && isNontrivialChain(mi)) {
             return buildChainExpression(mi, start, end);
         }
+        // Receiver wraps internally (e.g. `blah\n.x.y()`): wrap the tail in
+        // CONTINUATION so it lands at receiver-line + 8.
+        if (expr instanceof MethodInvocation mi && mi.getExpression() != null) {
+            Expression recv = mi.getExpression();
+            int recvStart = recv.getStartPosition();
+            int recvEnd = recvStart + recv.getLength();
+            if (containsLineBreak(recvStart, recvEnd)) {
+                int wrapPoint = chainBuilder.firstWrappedSelectorStart(recvStart, recvEnd);
+                if (wrapPoint > start) {
+                    return buildReceiverWrappedExpression(start, wrapPoint, end);
+                }
+            }
+        }
         // Call with wrapped args: decompose argument list.
         if (expr instanceof MethodInvocation mi && !mi.arguments().isEmpty() && needsStructuredCallArguments(mi.arguments(), mi)) {
             return buildCallExpression(mi, mi.arguments(), start, end);
@@ -2131,6 +2144,20 @@ final class JavaExpressionBuilder
             return false;
         }
         return arguments.getLast() != lambda;
+    }
+
+    private Block buildReceiverWrappedExpression(int start, int wrapPoint, int end)
+    {
+        JavaBlock.Builder composite = JavaBlock.builder(start, end, "ReceiverWrappedExpr");
+        Block head = owner.buildTokensRange(start, wrapPoint, "ReceiverWrappedHead");
+        composite.child(head);
+        Block tail = JavaBlock.builder(wrapPoint, end, "ReceiverWrappedTail")
+                .indent(Indent.continuationIndent())
+                .canUseFirstChildIndent(false)
+                .child(owner.buildTokensRange(wrapPoint, end, "ReceiverWrappedTailTokens"))
+                .build();
+        addSibling(composite, head, tail, Spacing.createSpacing(0, 0, 0, true, 1));
+        return composite.build();
     }
 
     /// Build a chain expression (not at statement level). Produces a composite
