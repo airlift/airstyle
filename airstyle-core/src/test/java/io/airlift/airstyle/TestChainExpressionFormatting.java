@@ -924,4 +924,36 @@ public class TestChainExpressionFormatting
 
         assertFormatsOldToNew(oldCode, newCode);
     }
+
+    @Test
+    void testFormatterFixesWrappedArgInsideFieldAccessReceiverCall()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    private void x()
+                    {
+                        blah
+                                .x.y(a,
+                                b);
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    private void x()
+                    {
+                        blah
+                                .x.y(a,
+                                        b);
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
 }
