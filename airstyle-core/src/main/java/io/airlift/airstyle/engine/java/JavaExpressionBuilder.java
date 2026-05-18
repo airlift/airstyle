@@ -841,7 +841,7 @@ final class JavaExpressionBuilder
             if (containsLineBreak(recvStart, recvEnd)) {
                 int wrapPoint = chainBuilder.firstWrappedSelectorStart(recvStart, recvEnd);
                 if (wrapPoint > start) {
-                    return buildReceiverWrappedExpression(start, wrapPoint, end);
+                    return buildReceiverWrappedExpression(mi, start, wrapPoint, end);
                 }
             }
         }
@@ -2146,15 +2146,23 @@ final class JavaExpressionBuilder
         return arguments.getLast() != lambda;
     }
 
-    private Block buildReceiverWrappedExpression(int start, int wrapPoint, int end)
+    private Block buildReceiverWrappedExpression(MethodInvocation mi, int start, int wrapPoint, int end)
     {
         JavaBlock.Builder composite = JavaBlock.builder(start, end, "ReceiverWrappedExpr");
         Block head = owner.buildTokensRange(start, wrapPoint, "ReceiverWrappedHead");
         composite.child(head);
+        // When the outer call has structured args, build the tail via
+        // buildCallExpression so wrapped args pick up the correct continuation
+        // from within the ReceiverWrappedTail block. Only use mi.arguments()
+        // (their positions are within [wrapPoint,end]); do NOT pass mi itself
+        // as the expr start since mi's AST range predates wrapPoint.
+        Block tailContent = (!mi.arguments().isEmpty() && needsStructuredCallArguments(mi.arguments(), mi))
+                ? buildCallExpression(mi, mi.arguments(), wrapPoint, end)
+                : owner.buildTokensRange(wrapPoint, end, "ReceiverWrappedTailTokens");
         Block tail = JavaBlock.builder(wrapPoint, end, "ReceiverWrappedTail")
                 .indent(Indent.continuationIndent())
                 .canUseFirstChildIndent(false)
-                .child(owner.buildTokensRange(wrapPoint, end, "ReceiverWrappedTailTokens"))
+                .child(tailContent)
                 .build();
         addSibling(composite, head, tail, Spacing.createSpacing(0, 0, 0, true, 1));
         return composite.build();
