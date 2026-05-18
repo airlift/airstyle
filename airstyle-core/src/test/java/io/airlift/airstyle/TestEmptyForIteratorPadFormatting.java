@@ -49,4 +49,38 @@ public class TestEmptyForIteratorPadFormatting
 
         assertFormatsOldToNew(oldCode, newCode);
     }
+
+    @Test
+    void testFormatterFixesEmptyForIteratorPaddingWithWrappedHeader()
+    {
+        String oldCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        for (Iterator<String> iter = list.iterator();
+                                iter.hasNext() && size < max;) {
+                            work(iter.next());
+                        }
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        for (Iterator<String> iter = list.iterator();
+                                iter.hasNext() && size < max; ) {
+                            work(iter.next());
+                        }
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
 }
