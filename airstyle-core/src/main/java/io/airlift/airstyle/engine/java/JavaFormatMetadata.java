@@ -223,7 +223,7 @@ record JavaFormatMetadata(
             public boolean visit(ExpressionMethodReference node)
             {
                 // Method reference type arguments: `Foo::<T>method`
-                recordMethodReferenceTypeArgs(node.typeArguments(), node.getStartPosition(), node.getName().getStartPosition());
+                recordMethodReferenceTypeArgs(node.typeArguments(), node.getStartPosition(), node.getStartPosition() + node.getLength());
                 return super.visit(node);
             }
 
@@ -231,14 +231,14 @@ record JavaFormatMetadata(
             public boolean visit(TypeMethodReference node)
             {
                 // Type method reference type arguments: `Foo::<T>method` where LHS is a type.
-                recordMethodReferenceTypeArgs(node.typeArguments(), node.getStartPosition(), node.getName().getStartPosition());
+                recordMethodReferenceTypeArgs(node.typeArguments(), node.getStartPosition(), node.getStartPosition() + node.getLength());
                 return super.visit(node);
             }
 
             @Override
             public boolean visit(SuperMethodReference node)
             {
-                recordMethodReferenceTypeArgs(node.typeArguments(), node.getStartPosition(), node.getName().getStartPosition());
+                recordMethodReferenceTypeArgs(node.typeArguments(), node.getStartPosition(), node.getStartPosition() + node.getLength());
                 return super.visit(node);
             }
 
