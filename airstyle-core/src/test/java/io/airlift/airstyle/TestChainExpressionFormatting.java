@@ -548,6 +548,27 @@ public class TestChainExpressionFormatting
     }
 
     @Test
+    void testMethodReferenceWithComplexTypeWitnessHasNoSpacesAroundBrackets()
+    {
+        // Method-reference type witnesses are generic brackets, not binary
+        // operators, so no spaces are inserted around `<` and `>`.
+        String code =
+                """
+                import com.google.common.collect.ImmutableList;
+
+                class Test
+                {
+                    Object run(Object target)
+                    {
+                        return target.stream().map(ImmutableList::<Map<String, Object>>of);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testConstructorReferenceWithTypeWitnessHasNoSpacesAroundBrackets()
     {
         // Method-reference type witnesses are generic brackets, not binary
@@ -561,6 +582,27 @@ public class TestChainExpressionFormatting
                     Object run(Object target)
                     {
                         return target.stream().map(ArrayList::<Object>new);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testConstructorReferenceWithComplexTypeWitnessHasNoSpacesAroundBrackets()
+    {
+        // Method-reference type witnesses are generic brackets, not binary
+        // operators, so no spaces are inserted around `<` and `>`.
+        String code =
+                """
+                import java.util.ArrayList;
+
+                class Test
+                {
+                    Object run(Object target)
+                    {
+                        return target.stream().map(ArrayList::<Map<String, Object>>new);
                     }
                 }
                 """;
