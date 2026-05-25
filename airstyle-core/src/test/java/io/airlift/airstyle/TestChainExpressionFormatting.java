@@ -548,6 +548,27 @@ public class TestChainExpressionFormatting
     }
 
     @Test
+    void testConstructorReferenceWithTypeWitnessHasNoSpacesAroundBrackets()
+    {
+        // Method-reference type witnesses are generic brackets, not binary
+        // operators, so no spaces are inserted around `<` and `>`.
+        String code =
+                """
+                import java.util.ArrayList;
+
+                class Test
+                {
+                    Object run(Object target)
+                    {
+                        return target.stream().map(ArrayList::<Object>new);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterIndentsMethodReferenceOnChainTail()
     {
         String code =
