@@ -130,10 +130,10 @@ public class TestStaticImportRuleNormalizer
                         String mapped = Objects.requireNonNull(values).entrySet().stream()
                                 .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Math.toIntExact(entry.getValue())))
                                 .toString();
-                        String listed = ImmutableList.copyOf(names).stream()
+                        String listed = names.stream()
                                 .collect(ImmutableList.toImmutableList())
                                 .toString();
-                        String settled = ImmutableSet.copyOf(numbers).stream()
+                        String settled = numbers.stream()
                                 .collect(ImmutableSet.toImmutableSet())
                                 .toString();
                         return mapped + listed + settled;
@@ -160,10 +160,10 @@ public class TestStaticImportRuleNormalizer
                         String mapped = requireNonNull(values).entrySet().stream()
                                 .collect(toImmutableMap(Map.Entry::getKey, entry -> toIntExact(entry.getValue())))
                                 .toString();
-                        String listed = ImmutableList.copyOf(names).stream()
+                        String listed = names.stream()
                                 .collect(toImmutableList())
                                 .toString();
-                        String settled = ImmutableSet.copyOf(numbers).stream()
+                        String settled = numbers.stream()
                                 .collect(toImmutableSet())
                                 .toString();
                         return mapped + listed + settled;
