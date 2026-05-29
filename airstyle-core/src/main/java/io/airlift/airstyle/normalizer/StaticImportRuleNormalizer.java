@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
@@ -287,6 +288,16 @@ public final class StaticImportRuleNormalizer
                 Set<String> methods = REQUIRE_STATIC_IMPORTS.get(expressionFqn);
                 if (methods != null && !methods.contains(node.getName().getIdentifier())) {
                     result.add(expressionFqn);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visit(SimpleType node)
+            {
+                String typeFqn = resolveClassName(node.getName(), importedClassesBySimpleName);
+                if (REQUIRE_STATIC_IMPORTS.containsKey(typeFqn)) {
+                    result.add(typeFqn);
                 }
                 return true;
             }

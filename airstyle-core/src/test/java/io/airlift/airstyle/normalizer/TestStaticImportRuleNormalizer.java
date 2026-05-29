@@ -241,6 +241,64 @@ public class TestStaticImportRuleNormalizer
     }
 
     @Test
+    void testFormatterFixesRequiredStaticImportsWhenClassStillUsedAsParameter()
+    {
+        String oldCode =
+                """
+                import com.google.common.collect.ImmutableList;
+                import com.google.common.collect.ImmutableMap;
+                import com.google.common.collect.ImmutableSet;
+
+                class Test {
+                    String run(ImmutableMap<String, Integer> values, ImmutableList<String> names, ImmutableSet<Integer> numbers)
+                    {
+                        String mapped = values.entrySet().stream()
+                                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Math.toIntExact(entry.getValue())))
+                                .toString();
+                        String listed = names.stream()
+                                .collect(ImmutableList.toImmutableList())
+                                .toString();
+                        String settled = numbers.stream()
+                                .collect(ImmutableSet.toImmutableSet())
+                                .toString();
+                        return mapped + listed + settled;
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                import com.google.common.collect.ImmutableList;
+                import com.google.common.collect.ImmutableMap;
+                import com.google.common.collect.ImmutableSet;
+
+                import static com.google.common.collect.ImmutableList.toImmutableList;
+                import static com.google.common.collect.ImmutableMap.toImmutableMap;
+                import static com.google.common.collect.ImmutableSet.toImmutableSet;
+                import static java.lang.Math.toIntExact;
+
+                class Test
+                {
+                    String run(ImmutableMap<String, Integer> values, ImmutableList<String> names, ImmutableSet<Integer> numbers)
+                    {
+                        String mapped = values.entrySet().stream()
+                                .collect(toImmutableMap(Map.Entry::getKey, entry -> toIntExact(entry.getValue())))
+                                .toString();
+                        String listed = names.stream()
+                                .collect(toImmutableList())
+                                .toString();
+                        String settled = numbers.stream()
+                                .collect(toImmutableSet())
+                                .toString();
+                        return mapped + listed + settled;
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterFixesBannedPlainUtilityImports()
     {
         String oldCode =
