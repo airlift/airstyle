@@ -109,6 +109,57 @@ public class TestAnnotationUseStyleFormatting
     }
 
     @Test
+    void testClassDeclWithWrappedAnnotationAndWrappedParamsKeepsAnnotationContinuation()
+    {
+        String code =
+                """
+                @McpTool(
+                        name = "debug-tool",
+                        description = "Comprehensive debug tool",
+                        app = @McpApp(
+                                resourceUri = "ui://debug-tool/mcp-app.html",
+                                sourcePath = "debug-app.html"))
+                class Test {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testAnnotationDeclWithWrappedAnnotationAndWrappedParamsKeepsAnnotationContinuation()
+    {
+        String code =
+                """
+                @McpTool(
+                        name = "debug-tool",
+                        description = "Comprehensive debug tool",
+                        app = @McpApp(
+                                resourceUri = "ui://debug-tool/mcp-app.html",
+                                sourcePath = "debug-app.html"))
+                @interface Test {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testEnumDeclWithWrappedAnnotationAndWrappedParamsKeepsAnnotationContinuation()
+    {
+        String code =
+                """
+                @McpTool(
+                        name = "debug-tool",
+                        description = "Comprehensive debug tool",
+                        app = @McpApp(
+                                resourceUri = "ui://debug-tool/mcp-app.html",
+                                sourcePath = "debug-app.html"))
+                enum Test {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testNestedAnnotationInMemberValuePairNotDuplicated()
     {
         String code =
