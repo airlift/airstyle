@@ -924,10 +924,17 @@ final class JavaDeclarationBuilder
             header.child(owner.buildTokensRange(start, headerEnd, "RecordHeaderTokens"));
             return header.build();
         }
-        // Prefix: up to and including `(`.
-        Block prefix = owner.buildTokensRange(start, lparen + 1, "RecordHeaderPrefix");
-        header.child(prefix);
-        Block prev = prefix;
+        // Prefix: up to and including `(`. If there's a wrapped annotation in
+        // the prefix, decompose it so its value list carries CONTINUATION indent.
+        Block prev;
+        if (owner.hasWrappedAnnotationIn(start, lparen)) {
+            prev = owner.emitPrefixWithAnnotations(header, start, lparen + 1);
+        }
+        else {
+            Block prefix = owner.buildTokensRange(start, lparen + 1, "RecordHeaderPrefix");
+            header.child(prefix);
+            prev = prefix;
+        }
 
         // Components: each component gets CONTINUATION indent.
         Object[] components = node.recordComponents().toArray();
