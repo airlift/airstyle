@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
@@ -110,6 +111,8 @@ public final class StaticImportRuleNormalizer
 
         collectImportRules(compilationUnit, bannedStaticImportsByMethod, staticImportsToRemove, importsToRemove);
 
+        Set<String> requireStaticImportClassesWithOtherCalls = classesWithNonStaticImportedMethodCalls(compilationUnit, importedClassesBySimpleName);
+
         compilationUnit.accept(new ASTVisitor()
         {
             @Override
@@ -143,7 +146,9 @@ public final class StaticImportRuleNormalizer
                     rewrite.set(node, MethodInvocation.EXPRESSION_PROPERTY, null, null);
                     sourceRewritten[0] = true;
                     staticImportsToAdd.add(expressionFqn + "." + methodName);
-                    importsToRemove.add(expressionFqn);
+                    if (!requireStaticImportClassesWithOtherCalls.contains(expressionFqn)) {
+                        importsToRemove.add(expressionFqn);
+                    }
                 }
                 else if (BANNED_PLAIN_IMPORT_CLASSES.contains(expressionFqn)) {
                     rewrite.set(node, MethodInvocation.EXPRESSION_PROPERTY, null, null);
@@ -264,6 +269,40 @@ public final class StaticImportRuleNormalizer
             return true;
         }
         return classFqn.equals(OPTIONAL_CLASS);
+    }
+
+    private static Set<String> classesWithNonStaticImportedMethodCalls(
+            CompilationUnit compilationUnit,
+            Map<String, String> importedClassesBySimpleName)
+    {
+        Set<String> result = new HashSet<>();
+        compilationUnit.accept(new ASTVisitor()
+        {
+            @Override
+            public boolean visit(MethodInvocation node)
+            {
+                if (!(node.getExpression() instanceof Name expressionName)) {
+                    return true;
+                }
+                String expressionFqn = resolveClassName(expressionName, importedClassesBySimpleName);
+                Set<String> methods = REQUIRE_STATIC_IMPORTS.get(expressionFqn);
+                if (methods != null && !methods.contains(node.getName().getIdentifier())) {
+                    result.add(expressionFqn);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visit(SimpleType node)
+            {
+                String typeFqn = resolveClassName(node.getName(), importedClassesBySimpleName);
+                if (REQUIRE_STATIC_IMPORTS.containsKey(typeFqn)) {
+                    result.add(typeFqn);
+                }
+                return true;
+            }
+        });
+        return result;
     }
 
     private static Map<String, String> importedClassesBySimpleName(CompilationUnit compilationUnit)
