@@ -175,6 +175,72 @@ public class TestStaticImportRuleNormalizer
     }
 
     @Test
+    void testFormatterFixesRequiredStaticImportsWhenClassStillUsedAsStaticCalls()
+    {
+        String oldCode =
+                """
+                import com.google.common.collect.ImmutableList;
+                import com.google.common.collect.ImmutableMap;
+                import com.google.common.collect.ImmutableSet;
+
+                import java.util.List;
+                import java.util.Map;
+                import java.util.Set;
+
+                class Test {
+                    String run(Map<String, Integer> values, List<String> names, Set<Integer> numbers)
+                    {
+                        String mapped = ImmutableMap.copyOf(values).entrySet().stream()
+                                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Math.toIntExact(entry.getValue())))
+                                .toString();
+                        String listed = ImmutableList.copyOf(names).stream()
+                                .collect(ImmutableList.toImmutableList())
+                                .toString();
+                        String settled = ImmutableSet.copyOf(numbers).stream()
+                                .collect(ImmutableSet.toImmutableSet())
+                                .toString();
+                        return mapped + listed + settled;
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                import com.google.common.collect.ImmutableList;
+                import com.google.common.collect.ImmutableMap;
+                import com.google.common.collect.ImmutableSet;
+
+                import java.util.List;
+                import java.util.Map;
+                import java.util.Set;
+
+                import static com.google.common.collect.ImmutableList.toImmutableList;
+                import static com.google.common.collect.ImmutableMap.toImmutableMap;
+                import static com.google.common.collect.ImmutableSet.toImmutableSet;
+                import static java.lang.Math.toIntExact;
+
+                class Test
+                {
+                    String run(Map<String, Integer> values, List<String> names, Set<Integer> numbers)
+                    {
+                        String mapped = ImmutableMap.copyOf(values).entrySet().stream()
+                                .collect(toImmutableMap(Map.Entry::getKey, entry -> toIntExact(entry.getValue())))
+                                .toString();
+                        String listed = ImmutableList.copyOf(names).stream()
+                                .collect(toImmutableList())
+                                .toString();
+                        String settled = ImmutableSet.copyOf(numbers).stream()
+                                .collect(toImmutableSet())
+                                .toString();
+                        return mapped + listed + settled;
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterFixesBannedPlainUtilityImports()
     {
         String oldCode =
