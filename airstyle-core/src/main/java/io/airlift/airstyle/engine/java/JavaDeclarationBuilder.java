@@ -1098,7 +1098,7 @@ final class JavaDeclarationBuilder
             }
         }
         if (cursor < end) {
-            Block tail = owner.buildTokensRange(cursor, end, "RecordCompTail");
+            Block tail = owner.buildTokensRange(cursor, end, "RecordCompTail", false);
             if (prev == null) {
                 component.child(tail);
             }

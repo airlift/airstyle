@@ -181,6 +181,24 @@ public class TestAnnotationUseStyleFormatting
     }
 
     @Test
+    void testRecordComponentDeclWithWrappedAnnotationAndWrappedParamsKeepsAnnotationContinuation()
+    {
+        String code =
+                """
+                record Test(
+                        @McpTool(
+                                name = "debug-tool",
+                                description = "Comprehensive debug tool",
+                                app = @McpApp(
+                                        resourceUri = "ui://debug-tool/mcp-app.html",
+                                        sourcePath = "debug-app.html"))
+                        Object test) {}
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testEnumDeclWithWrappedAnnotationAndWrappedParamsKeepsAnnotationContinuation()
     {
         String code =
