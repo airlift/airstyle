@@ -332,7 +332,7 @@ final class JavaDeclarationBuilder
         JavaBlock.Builder composite = JavaBlock.builder(start, end, "AnnotationType");
         int braceOffset = owner.findFirstOpenBrace(start, end);
         int headerEnd = braceOffset < 0 ? end : braceOffset;
-        Block header = owner.buildTokensRange(start, headerEnd, "AnnotationTypeHeader");
+        Block header = buildTypeHeader(node, start, headerEnd);
         composite.child(header);
         Block prev = header;
         if (braceOffset < 0) {
