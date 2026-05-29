@@ -375,6 +375,17 @@ final class JavaExpressionBuilder
                 ASTNode nextArg = (ASTNode) arguments.get(i + 1);
                 int nextArgStart = nextArg.getStartPosition();
                 for (int j = argEnd; j < nextArgStart && j < source.length(); j++) {
+                    // Skip comments — their text may contain commas.
+                    if (source.charAt(j) == '/' && j + 1 < source.length()
+                            && (source.charAt(j + 1) == '/' || source.charAt(j + 1) == '*')) {
+                        for (JavaTokens.Token tok : tokensIn(j, nextArgStart)) {
+                            if (tok.start() == j && tok.isComment()) {
+                                j = tok.end() - 1;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
                     if (source.charAt(j) == ',') {
                         argEnd = j + 1;
                         // Extend through any same-line trailing comment after

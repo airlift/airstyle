@@ -663,6 +663,70 @@ public class TestCommentPreservationFormatting
     }
 
     @Test
+    void testFormatterKeepsInlineBlockCommentContainingACommaBetweenArguments()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        verify(metadata,
+                                LegacyClass.class,
+                                null,
+                                false /* don't care, but this comment contains a comma */,
+                                attributes);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsInlineJavadocCommentContainingACommaBetweenArguments()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        verify(metadata,
+                                LegacyClass.class,
+                                null,
+                                false /** don't care, but this comment contains a comma */,
+                                attributes);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
+    void testFormatterKeepsInlineLineCommentContainingACommaBetweenArguments()
+    {
+        String code =
+                """
+                class Test
+                {
+                    void run()
+                    {
+                        verify(metadata,
+                                LegacyClass.class,
+                                null,
+                                false // don't care, but this comment contains a comma
+                                ,
+                                attributes);
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
+    }
+
+    @Test
     void testFormatterKeepsBlockCommentInsideForLoopHeader()
     {
         String code =
