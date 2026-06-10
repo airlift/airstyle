@@ -143,6 +143,9 @@ public class TestStaticImportRuleNormalizer
 
         String newCode =
                 """
+                import com.google.common.collect.ImmutableList;
+                import com.google.common.collect.ImmutableSet;
+
                 import java.util.List;
                 import java.util.Map;
                 import java.util.Set;
@@ -167,6 +170,74 @@ public class TestStaticImportRuleNormalizer
                                 .collect(toImmutableSet())
                                 .toString();
                         return mapped + listed + settled;
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsPlainImportWhenTypeStillUsedAfterStaticImportRewrite()
+    {
+        String oldCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                class Test
+                {
+                    Object run()
+                    {
+                        ImmutableSet.of("5");
+                        return ImmutableSet.toImmutableSet();
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
+                class Test
+                {
+                    Object run()
+                    {
+                        ImmutableSet.of("5");
+                        return toImmutableSet();
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterRemovesPlainImportWhenTypeOnlyUsedForStaticImportRewrite()
+    {
+        String oldCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                class Test
+                {
+                    Object run()
+                    {
+                        return ImmutableSet.toImmutableSet();
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
+                class Test
+                {
+                    Object run()
+                    {
+                        return toImmutableSet();
                     }
                 }
                 """;

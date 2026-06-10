@@ -143,7 +143,6 @@ public final class StaticImportRuleNormalizer
                     rewrite.set(node, MethodInvocation.EXPRESSION_PROPERTY, null, null);
                     sourceRewritten[0] = true;
                     staticImportsToAdd.add(expressionFqn + "." + methodName);
-                    importsToRemove.add(expressionFqn);
                 }
                 else if (BANNED_PLAIN_IMPORT_CLASSES.contains(expressionFqn)) {
                     rewrite.set(node, MethodInvocation.EXPRESSION_PROPERTY, null, null);
