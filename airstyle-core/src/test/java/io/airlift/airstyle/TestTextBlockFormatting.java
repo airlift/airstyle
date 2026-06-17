@@ -1484,12 +1484,13 @@ public class TestTextBlockFormatting
                 {
                     String policy =
                             \"""
-                            field
+                                    field
                             \""";
                 }
                 """;
 
         assertFormatsOldToNew(oldCode, newCode);
+        assertEquals(firstTextBlockLiteralValue(oldCode), firstTextBlockLiteralValue(newCode));
     }
 
     @Test
