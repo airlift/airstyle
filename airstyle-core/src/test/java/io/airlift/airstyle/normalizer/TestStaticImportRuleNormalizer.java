@@ -214,6 +214,74 @@ public class TestStaticImportRuleNormalizer
     }
 
     @Test
+    void testFormatterKeepsPlainImportWhenTypeStillUsedAsParameterAfterStaticImportRewrite()
+    {
+        String oldCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                class Test
+                {
+                    Object run(ImmutableSet<?> set)
+                    {
+                        return ImmutableSet.toImmutableSet();
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
+                class Test
+                {
+                    Object run(ImmutableSet<?> set)
+                    {
+                        return toImmutableSet();
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsPlainImportWhenTypeStillUsedAsReturnTypeAfterStaticImportRewrite()
+    {
+        String oldCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                class Test
+                {
+                    ImmutableSet<?> run()
+                    {
+                        return ImmutableSet.toImmutableSet();
+                    }
+                }
+                """;
+
+        String newCode =
+                """
+                import com.google.common.collect.ImmutableSet;
+
+                import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
+                class Test
+                {
+                    ImmutableSet<?> run()
+                    {
+                        return toImmutableSet();
+                    }
+                }
+                """;
+
+        assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
     void testFormatterRemovesPlainImportWhenTypeOnlyUsedForStaticImportRewrite()
     {
         String oldCode =
