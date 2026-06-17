@@ -207,7 +207,9 @@ final class JavaTokenRunBuilder
         if (jlsIndent < 0) {
             return List.of();
         }
-        int contentIndent = startsAtLineIndent ? jlsIndent : textBlockMinimumContentIndent(text);
+        int contentIndent = startsAtLineIndent || textBlockMarginPolicy == TextBlockMarginPolicy.PRESERVE_POSITIVE
+                ? jlsIndent
+                : textBlockMinimumContentIndent(text);
         if (contentIndent < 0) {
             contentIndent = jlsIndent;
         }
