@@ -15,6 +15,7 @@ package io.airlift.airstyle;
 
 import org.junit.jupiter.api.Test;
 
+import static io.airlift.airstyle.FormatterAssertions.assertCanonicalFormatting;
 import static io.airlift.airstyle.FormatterAssertions.assertFormatsOldToNew;
 
 public class TestEmptyForIteratorPadFormatting
@@ -82,5 +83,24 @@ public class TestEmptyForIteratorPadFormatting
                 """;
 
         assertFormatsOldToNew(oldCode, newCode);
+    }
+
+    @Test
+    void testFormatterKeepsMultilineForHeaderWithCommaSeparatedUpdates()
+    {
+        String code =
+                """
+                final class Reproducer
+                {
+                    static void reproduce(int first, int second)
+                    {
+                        for (;
+                                first < 1;
+                                first++, second++) {}
+                    }
+                }
+                """;
+
+        assertCanonicalFormatting(code);
     }
 }

@@ -246,7 +246,7 @@ final class JavaLoopConstructBuilder
             if (index + 1 < expressions.size()) {
                 ASTNode next = expressions.get(index + 1);
                 int separatorEnd = support.lastNonWhitespaceBefore(next.getStartPosition(), expressionEnd);
-                expressionBlockEnd = separatorEnd > 0 ? separatorEnd + 1 : expressionEnd;
+                expressionBlockEnd = separatorEnd > 0 ? separatorEnd : expressionEnd;
             }
             else {
                 expressionBlockEnd = expressionEnd;
